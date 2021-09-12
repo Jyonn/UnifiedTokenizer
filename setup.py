@@ -1,11 +1,16 @@
 from setuptools import setup, find_packages
 
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "readme.md").read_text()
+
 setup(
     name='UniTok',
-    version='0.0.3',
+    version='0.0.4',
     keywords=('token', 'tokenizer', 'bert'),
     description='Unified Tokenizer',
-    long_description='Parse and tokenize data for downstream usage (e.g. the input of Bert model)',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     license='MIT Licence',
     url='https://github.com/Jyonn/UnifiedTokenizer',
     author='Jyonn Liu',
