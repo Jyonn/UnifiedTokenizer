@@ -33,4 +33,4 @@ class Column:
 
 class IndexColumn(Column):
     def __init__(self, name='index'):
-        super().__init__(name, tokenizer=Tokenizer(IdTok(name=name)))
+        super().__init__(name, tokenizer=IdTok(name=name).as_sing())
