@@ -5,7 +5,7 @@ from typing import Dict, Optional
 import numpy as np
 import pandas as pd
 
-from .column import Column
+from .column import Column, IndexColumn
 from .tok.bert_tok import BertTok
 from .tok.entity_tok import EntTok
 from .tok.id_tok import IdTok
@@ -34,6 +34,15 @@ class UniTok:
             self.id_col = col
 
         return self
+
+    def add_index_col(self, name='index'):
+        col = IndexColumn(name=name)
+        self.cols[col.name] = col
+        self.vocab_depot.append(col)
+
+        if self.id_col:
+            raise ValueError('Already has id column before adding IndexColumn!')
+        self.id_col = col
 
     def read_file(self, df, sep=None):
         if isinstance(df, str):
@@ -68,6 +77,9 @@ class UniTok:
             col.data = []
             col.tokenize(self.data[col_name])
         return self
+
+    def get_tok_path(self, col_name, store_dir):
+        return self.cols[col_name].tok.vocab.get_store_path(store_dir)
 
     def store_data(self, store_dir):
         os.makedirs(store_dir, exist_ok=True)

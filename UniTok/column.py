@@ -1,6 +1,7 @@
 from tqdm import tqdm
 
 from .analysis.analysis import Analysis
+from .tok import IdTok
 from .tok.tokenizer import Tokenizer, ListTokenizer
 
 
@@ -28,3 +29,8 @@ class Column:
             print('[NOT ListTokenizer]')
             for obj in tqdm(objs):
                 self.tok(obj)
+
+
+class IndexColumn(Column):
+    def __init__(self, name='index'):
+        super().__init__(name, tokenizer=Tokenizer(IdTok(name=name)))
