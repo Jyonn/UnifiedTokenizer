@@ -51,12 +51,17 @@ class UniTok:
         self.data = df
         return self
 
+    def get_col_data(self, col: Column):
+        if isinstance(col, IndexColumn):
+            return self.data.index
+        return self.data[col.name]
+
     def analyse(self):
         print('[ COLUMNS ]')
         for col_name in self.cols:
             col = self.cols[col_name]  # type: Column
             print('[ COL:', col.name, ']')
-            col.analyse(self.data[col_name])
+            col.analyse(self.get_col_data(col))
             print()
 
         print('[ VOCABS ]')
@@ -75,7 +80,7 @@ class UniTok:
             print('[ COL:', col_name, ']')
             col = self.cols[col_name]  # type: Column
             col.data = []
-            col.tokenize(self.data[col_name])
+            col.tokenize(self.get_col_data(col))
         return self
 
     def get_tok_path(self, col_name, store_dir):
