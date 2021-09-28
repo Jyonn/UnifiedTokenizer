@@ -29,6 +29,7 @@ class Vocab:
     def extend(self, objs):
         for obj in objs:
             self.append(obj)
+        return self
 
     def append(self, obj) -> int:
         if obj not in self.obj2index:
@@ -51,21 +52,26 @@ class Vocab:
         else:
             for token in tokens:
                 self.append(token)
+        return self
 
     def get_tokens(self):
         return [self.index2obj[i] for i in range(len(self.index2obj))]
 
     def allow_edit(self):
         self.editable = True
+        return self
 
     def deny_edit(self):
         self.editable = False
+        return self
 
     def get_store_path(self, store_dir):
         return os.path.join(store_dir, 'tok.{}.dat'.format(self.name))
 
-    def load(self, store_dir):
-        store_path = self.get_store_path(store_dir)
+    def load(self, store_dir: str, as_dir=True):
+        store_path = store_dir
+        if as_dir:
+            store_path = self.get_store_path(store_dir)
         self.obj2index, self.index2obj = {}, {}
 
         with open(store_path, 'r') as f:
@@ -74,11 +80,14 @@ class Vocab:
             self.obj2index[obj] = index
             self.index2obj[index] = obj
 
+        return self
+
     def save(self, store_dir):
         store_path = self.get_store_path(store_dir)
         with open(store_path, 'w') as f:
             for i in range(len(self.index2obj)):
                 f.write('{}\n'.format(self.index2obj[i]))
+        return self
 
     def get_size(self):
         return len(self.index2obj)

@@ -1,7 +1,9 @@
+import abc
+
 from .tok import BaseTok
 
 
-class Tokenizer:
+class Tokenizer(abc.ABC):
     def __init__(self, tok: BaseTok):
         self.tok = tok
 
@@ -31,3 +33,8 @@ class ListTokenizer(Tokenizer):
             if self.padding:
                 ids.extend([self.tok.PAD] * (self.max_length - len(ids)))
         return ids
+
+
+T = Tokenizer
+SingT = SingTokenizer
+ListT = ListTokenizer

@@ -38,7 +38,7 @@ import pandas as pd
 
 
 from UniTok import UniTok, Column
-from UniTok.tok import IdTok, EntTok, BertTok, SingTokenizer, ListTokenizer
+from UniTok.tok import IdTok, EntTok, BertTok, SingT, ListT
 ```
 
 ### Read data
@@ -69,19 +69,19 @@ _SingleTokenizer_ means it only omits one token id, while _ListTokenizer_ genera
 ut = UniTok()
 ut.add_col(Column(
     name='nid',
-    tokenizer=SingTokenizer(id_tok),
+    tokenizer=id_tok.as_sing(),
 )).add_col(Column(
     name='cat',
-    tokenizer=SingTokenizer(cat_tok)
+    tokenizer=cat_tok.as_sing()
 )).add_col(Column(
     name='subCat',
-    tokenizer=SingTokenizer(cat_tok),
+    tokenizer=cat_tok.as_sing(),
 )).add_col(Column(
     name='title',
-    tokenizer=ListTokenizer(txt_tok),
+    tokenizer=txt_tok.as_list(),
 )).add_col(Column(
     name='abs',
-    tokenizer=ListTokenizer(txt_tok),
+    tokenizer=txt_tok.as_list(),
 )).read_file(df)
 ```
 
@@ -164,19 +164,19 @@ It shows the distribution of the length of each column (if using _ListTokenizer_
 ut = UniTok()
 ut.add_col(Column(
     name='nid',
-    tokenizer=SingTokenizer(id_tok),
+    tokenizer=id_tok.as_sing(),
 )).add_col(Column(
     name='cat',
-    tokenizer=SingTokenizer(cat_tok)
+    tokenizer=cat_tok.as_sing()
 )).add_col(Column(
     name='subCat',
-    tokenizer=SingTokenizer(cat_tok),
+    tokenizer=cat_tok.as_sing(),
 )).add_col(Column(
     name='title',
-    tokenizer=ListTokenizer(txt_tok, max_length=10),
+    tokenizer=txt_tok.as_list(max_length=10),
 )).add_col(Column(
     name='abs',
-    tokenizer=ListTokenizer(txt_tok, max_length=30),
+    tokenizer=txt_tok.as_list(max_length=30),
 )).read_file(df)
 ```
 

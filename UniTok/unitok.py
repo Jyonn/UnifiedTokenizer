@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -9,21 +9,30 @@ from .column import Column
 from .tok.bert_tok import BertTok
 from .tok.entity_tok import EntTok
 from .tok.id_tok import IdTok
-from .tok.tokenizer import ListTokenizer, SingTokenizer
+from .tok.tokenizer import ListTokenizer
 from UniTok.vocab.depot import VocabDepot
 from UniTok.vocab.vocab import Vocab
 
 
 class UniTok:
+    VER = 'v2.1'
+
     def __init__(self):
         self.cols = dict()  # type: Dict[str, Column]
         self.vocab_depot = VocabDepot()
+        self.id_col = None  # type: Optional[Column]
         self.data = None
-        self.version = 'v2.0'
 
     def add_col(self, col: Column):
         self.cols[col.name] = col
         self.vocab_depot.append(col)
+
+        if isinstance(col.tok, IdTok):
+            if self.id_col:
+                print(self.id_col.name, col.name)
+                raise ValueError('Only one id column (with IdTok) is required!')
+            self.id_col = col
+
         return self
 
     def read_file(self, df, sep=None):
@@ -47,13 +56,18 @@ class UniTok:
             print('[ VOC:', vocab.name, 'with ', vocab.get_size(), 'tokens ]')
             print('[ COL:', ', '.join(self.vocab_depot.col_map[vocab_name]), ']')
             print()
+        return self
 
     def tokenize(self):
+        if not self.id_col:
+            raise ValueError('Id column (with IdTok) is required')
+
         for col_name in self.cols:
             print('[ COL:', col_name, ']')
             col = self.cols[col_name]  # type: Column
             col.data = []
             col.tokenize(self.data[col_name])
+        return self
 
     def store_data(self, store_dir):
         os.makedirs(store_dir, exist_ok=True)
@@ -91,11 +105,13 @@ class UniTok:
                 ))
 
         meta_data = dict(
-            version=self.version,
+            version=UniTok.VER,
             vocab_info=vocab_info,
             col_info=col_info,
+            id_col=self.id_col.name,
         )
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'))
+        return self
 
 
 if __name__ == '__main__':
@@ -114,18 +130,18 @@ if __name__ == '__main__':
 
     ut.add_col(Column(
         name='nid',
-        tokenizer=SingTokenizer(id_tok),
+        tokenizer=id_tok.as_sing(),
     )).add_col(Column(
         name='cat',
-        tokenizer=SingTokenizer(cat_tok)
+        tokenizer=cat_tok.as_sing()
     )).add_col(Column(
         name='subCat',
-        tokenizer=SingTokenizer(cat_tok),
+        tokenizer=cat_tok.as_sing(),
     )).add_col(Column(
         name='title',
-        tokenizer=ListTokenizer(txt_tok),
+        tokenizer=txt_tok.as_list(),
     )).add_col(Column(
         name='abs',
-        tokenizer=ListTokenizer(txt_tok),
+        tokenizer=txt_tok.as_list(),
     )).read_file(df).tokenize()
     ut.store_data('MINDlarge_train')

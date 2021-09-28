@@ -2,11 +2,11 @@ from setuptools import setup, find_packages
 
 from pathlib import Path
 this_directory = Path(__file__).parent
-long_description = (this_directory / "readme.md").read_text()
+long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='UniTok',
-    version='0.0.4',
+    version='2.1.2',
     keywords=('token', 'tokenizer', 'bert'),
     description='Unified Tokenizer',
     long_description=long_description,
@@ -21,5 +21,7 @@ setup(
         'smartify==0.0.2',
         'termplot==0.0.2',
         'tqdm',
+        'numpy',
+        'pandas'
     ],
 )

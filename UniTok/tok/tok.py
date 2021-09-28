@@ -14,3 +14,15 @@ class BaseTok:
 
     def __call__(self, obj):
         return self.t(obj)
+
+    def as_sing(self):
+        from .tokenizer import SingT
+        return SingT(self)
+
+    def as_list(self, max_length=0, padding=False):
+        from .tokenizer import ListT
+        return ListT(self, max_length=max_length, padding=padding)
+
+    def load_vocab(self, store_dir: str, as_dir=True):
+        self.vocab.load(store_dir=store_dir, as_dir=as_dir)
+        return self
