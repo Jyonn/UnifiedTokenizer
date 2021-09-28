@@ -7,4 +7,4 @@ class EntTok(BaseTok):
         super(EntTok, self).__init__(name=name, vocab=vocab)
 
     def t(self, obj):
-        return self.vocab.append(obj)
+        return self.vocab.append(str(obj))
