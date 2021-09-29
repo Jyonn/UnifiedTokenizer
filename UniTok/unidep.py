@@ -41,13 +41,21 @@ class UniDep:
         self.vocab_depot = VocabDepot()
         for vocab_name in self.vocab_info.d:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
+        self.id2index = self.vocab_depot.depot[self.id_vocab].obj2index
 
     def is_list_col(self, col_name):
         return 'max_length' in self.col_info.d[col_name].d
 
+    def get_vocab_size(self, col_name, as_vocab=False):
+        vocab_id = col_name if as_vocab else self.meta_data.col_info.d[col_name].vocab
+        return self.meta_data.vocab_info.d[vocab_id].size
+
     def get_max_length(self, col_name):
         if self.is_list_col(col_name):
             return self.col_info.d[col_name].max_length
+
+    def get_sample_by_id(self, obj_id):
+        return self[self.id2index[obj_id]]
 
     def __getitem__(self, index):
         return {col_name: self.data[col_name][index] for col_name in self.col_info.d}

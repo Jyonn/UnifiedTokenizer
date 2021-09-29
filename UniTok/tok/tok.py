@@ -23,6 +23,6 @@ class BaseTok:
         from .tokenizer import ListT
         return ListT(self, max_length=max_length, padding=padding)
 
-    def load_vocab(self, store_dir: str, as_dir=True):
-        self.vocab.load(store_dir=store_dir, as_dir=as_dir)
+    def load_vocab(self, store_dir: str, as_path=False):
+        self.vocab.load(store_dir=store_dir, as_path=as_path)
         return self

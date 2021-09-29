@@ -68,12 +68,10 @@ class Vocab:
     def get_store_path(self, store_dir):
         return os.path.join(store_dir, 'tok.{}.dat'.format(self.name))
 
-    def load(self, store_dir: str, as_dir=True):
-        store_path = store_dir
-        if as_dir:
-            store_path = self.get_store_path(store_dir)
-        self.obj2index, self.index2obj = {}, {}
+    def load(self, store_dir: str, as_path=False):
+        store_path = store_dir if as_path else self.get_store_path(store_dir)
 
+        self.obj2index, self.index2obj = {}, {}
         with open(store_path, 'r') as f:
             objs = f.read().split('\n')[:-1]
         for index, obj in enumerate(objs):
