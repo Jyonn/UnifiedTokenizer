@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 import numpy as np
 
@@ -43,6 +44,8 @@ class UniDep:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocab_depot.depot[self.id_vocab].obj2index
 
+        self.index_order = list(range(self.sample_size))
+
     def is_list_col(self, col_name):
         return 'max_length' in self.col_info.d[col_name].d
 
@@ -57,7 +60,14 @@ class UniDep:
     def get_sample_by_id(self, obj_id):
         return self[self.id2index[obj_id]]
 
+    def shuffle(self, shuffle=True):
+        if shuffle:
+            random.shuffle(self.index_order)
+        else:
+            self.index_order = list(range(self.sample_size))
+
     def __getitem__(self, index):
+        index = self.index_order[index]
         return {col_name: self.data[col_name][index] for col_name in self.col_info.d}
 
     def __len__(self):
