@@ -31,9 +31,13 @@ class Classify:
         return self.d[item]
 
     def __setattr__(self, key, value):
-        if key == 'd':
+        if key in ['d', '_Classify__d']:
             object.__setattr__(self, key, value)
         else:
             if isinstance(value, dict):
                 value = Classify(value)
             self.d[key] = value
+
+
+if __name__ == '__main__':
+    print(Classify(dict(a=1, b=dict(x='a', y=[3,4]))).dict())
