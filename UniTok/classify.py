@@ -1,11 +1,9 @@
+import copy
+
+
 class Classify:
-    def dict(self, *args):
-        if args:
-            dict_ = dict()
-            for k in args:
-                dict_[k] = self.d.get(k)
-            return dict_
-        return self.d
+    def dict(self):
+        return self.__d
 
     def iter_list(self, l: list):
         new_l = []
@@ -26,6 +24,7 @@ class Classify:
         return d
 
     def __init__(self, d: dict):
+        self.__d = copy.deepcopy(d)
         self.d = self.iter_dict(d)
 
     def __getattr__(self, item):
