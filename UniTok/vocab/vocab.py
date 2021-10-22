@@ -7,7 +7,7 @@ from smartify import E
 
 @E.register(id_processor=E.idp_cls_prefix())
 class VocabError:
-    NotEditable = E('Vocab {} is not editable')
+    NotEditable = E('Vocab {} is not editable, but new word [{}] appears')
     NotEmptyForReserve = E('Vocab {} is not empty and not allowed reserve operation')
 
 
@@ -34,7 +34,7 @@ class Vocab:
     def append(self, obj) -> int:
         if obj not in self.obj2index:
             if not self.editable:
-                raise VocabError.NotEditable(self.name)
+                raise VocabError.NotEditable(self.name, obj)
             index = len(self.index2obj)
             self.obj2index[obj] = index
             self.index2obj[index] = obj
