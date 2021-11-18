@@ -25,10 +25,10 @@ class VocabDepot:
             else:
                 self.col_map[vocab.name] = [col.name]
 
-        if vocab.name is not None:
-            if vocab.name in self.depot and self.depot[vocab.name] != vocab:
-                raise VocabDepotError.ConflictName(vocab.name)
-            self.depot[vocab.name] = vocab
+        assert vocab.name is not None
+        if vocab.name in self.depot and self.depot[vocab.name] != vocab:
+            raise VocabDepotError.ConflictName(vocab.name)
+        self.depot[vocab.name] = vocab
 
     def get_vocab(self, name):
         if name in self.depot:

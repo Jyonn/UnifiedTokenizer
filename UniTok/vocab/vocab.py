@@ -1,7 +1,9 @@
+import collections
 import math
 import os
 from typing import Union, List
 
+import numpy as np
 from smartify import E
 
 
@@ -20,11 +22,60 @@ class Vocab:
         cls.__VOCAB_ID += 1
         return vocab_id
 
-    def __init__(self, name):
+    def __init__(self, name: str):
+        if not isinstance(name, str):
+            raise ValueError('Vocab name should be string')
+
         self.name = name
         self.obj2index, self.index2obj = {}, {}
         self.editable = True
         self.vocab_id = Vocab.get_vocab_id()
+        self.frequency = {}
+        self.max_frequency = 0
+
+    def init_frequency(self):
+        self.frequency = {}
+        self.max_frequency = 0
+
+    def frequency_count(self, *ids):
+        for index in ids:
+            if index not in self.frequency:
+                self.frequency[index] = 0
+            self.frequency[index] += 1
+            if self.max_frequency < self.frequency[index]:
+                self.max_frequency = self.frequency[index]
+
+    def frequency_analyse(self):
+        max_count = self.max_frequency
+        digits_max = 10
+        while digits_max < max_count:
+            digits_max = digits_max * 10
+
+        bounds = []
+        while digits_max >= 10:
+            digits_min = digits_max // 10
+            left_bound = (np.arange(9)[::-1] + 1) * digits_min
+            right_bound = left_bound + digits_min
+            bounds.extend(zip(left_bound, right_bound))
+            digits_max = digits_min
+        bounds.append((0, 1))
+        bounds.reverse()
+
+        bound_dict = dict()
+        for bound in bounds:
+            bound_dict[bound] = 0
+
+        for index in self.frequency:
+            for bound in bounds:
+                if bound[1] > self.frequency[index] >= bound[0]:
+                    bound_dict[bound] += 1
+                    break
+
+        for bound in bounds:
+            if not bound_dict[bound]:
+                del bound_dict[bound]
+
+        return bound_dict
 
     def extend(self, objs):
         for obj in objs:

@@ -15,7 +15,7 @@ from UniTok.vocab.vocab import Vocab
 
 
 class UniTok:
-    VER = 'v2.1'
+    VER = 'v2.2'
 
     def __init__(self):
         self.cols = dict()  # type: Dict[str, Column]
@@ -57,6 +57,10 @@ class UniTok:
         return self.data[col.name]
 
     def analyse(self):
+        for name in self.vocab_depot.depot:
+            vocab = self.vocab_depot.get_vocab(name)
+            vocab.init_frequency()
+
         print('[ COLUMNS ]')
         for col_name in self.cols:
             col = self.cols[col_name]  # type: Column
@@ -69,6 +73,8 @@ class UniTok:
             vocab = self.vocab_depot.depot[vocab_name]
             print('[ VOC:', vocab.name, 'with ', vocab.get_size(), 'tokens ]')
             print('[ COL:', ', '.join(self.vocab_depot.col_map[vocab_name]), ']')
+            frequency_dict = vocab.frequency_analyse()
+            print('[ FRQ:', frequency_dict, ']')
             print()
         return self
 

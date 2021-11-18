@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from .analysis.analysis import Analysis
+from .analysis.length_analysis import LengthAnalysis
 from .tok import IdTok
 from .tok.tokenizer import Tokenizer, ListTokenizer
 
@@ -11,7 +11,7 @@ class Column:
         self.tokenizer = tokenizer
         self.tok = tokenizer.tok
         self.data = []
-        self.analysis = Analysis()
+        self.length_analysis = LengthAnalysis()
 
     def tokenize(self, objs):
         self.data = []
@@ -21,14 +21,16 @@ class Column:
 
     def analyse(self, objs):
         if isinstance(self.tokenizer, ListTokenizer):
-            self.analysis.clean()
+            self.length_analysis.clean()
             for obj in tqdm(objs):
-                self.analysis.push(len(self.tok(obj)))
-            self.analysis.analyse()
+                ids = self.tok(obj)
+                self.tok.vocab.frequency_count(*ids)
+                self.length_analysis.push(len(ids))
+            self.length_analysis.analyse()
         else:
             print('[NOT ListTokenizer]')
             for obj in tqdm(objs):
-                self.tok(obj)
+                self.tok.vocab.frequency_count(self.tok(obj))
 
 
 class IndexColumn(Column):

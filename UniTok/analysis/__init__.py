@@ -1,6 +1,6 @@
-from .analysis import Analysis
+from .length_analysis import LengthAnalysis
 from .plot import Plot
 
 __all__ = [
-    Analysis, Plot,
+    LengthAnalysis, Plot,
 ]

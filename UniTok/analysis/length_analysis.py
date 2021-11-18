@@ -1,7 +1,7 @@
 from .plot import Plot
 
 
-class Analysis:
+class LengthAnalysis:
     def __init__(self):
         self.lengths = []
         self.max_length = -1
@@ -28,7 +28,7 @@ class Analysis:
 if __name__ == '__main__':
     import random
 
-    analysis = Analysis()
+    analysis = LengthAnalysis()
     analysis.clean()
     for _ in range(67923):
         analysis.push(random.randint(0, 99999) % 100)
