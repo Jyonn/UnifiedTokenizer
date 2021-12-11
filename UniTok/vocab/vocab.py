@@ -1,7 +1,7 @@
 import collections
 import math
 import os
-from typing import Union, List
+from typing import Union, List, Optional
 
 import numpy as np
 from smartify import E
@@ -29,9 +29,14 @@ class Vocab:
         self.name = name
         self.obj2index, self.index2obj = {}, {}
         self.editable = True
+        self.frequency_mode = False
+        self.oov_default = None
         self.vocab_id = Vocab.get_vocab_id()
         self.frequency = {}
         self.max_frequency = 0
+
+        self.frequent_vocab = []
+        self.reserve_tokens = None
 
     def init_frequency(self):
         self.frequency = {}
@@ -44,6 +49,21 @@ class Vocab:
             self.frequency[index] += 1
             if self.max_frequency < self.frequency[index]:
                 self.max_frequency = self.frequency[index]
+
+    def trim_vocab(self, min_frequency=1, oov_default=None):
+        self.oov_default = self.oov_default or oov_default
+        self.frequent_vocab = []
+        for index in self.frequency:
+            if self.frequency[index] >= min_frequency:
+                self.frequent_vocab.append(self.index2obj[index])
+        self.index2obj = dict()
+        self.obj2index = dict()
+
+        if self.reserve_tokens is not None:
+            self.reserve(self.reserve_tokens)
+        self.extend(self.frequent_vocab)
+
+        self.frequency_mode = True
 
     def frequency_analyse(self):
         max_count = self.max_frequency
@@ -84,7 +104,13 @@ class Vocab:
 
     def append(self, obj) -> int:
         if obj not in self.obj2index:
+            if self.frequency_mode:
+                if self.oov_default is not None:
+                    return self.oov_default
+                return -1
             if not self.editable:
+                if self.oov_default is not None:
+                    return self.oov_default
                 raise VocabError.NotEditable(self.name, obj)
             index = len(self.index2obj)
             self.obj2index[obj] = index
@@ -95,6 +121,7 @@ class Vocab:
         if self.get_size():
             raise VocabError.NotEmptyForReserve(self.name)
 
+        self.reserve_tokens = tokens
         if isinstance(tokens, int):
             digits = int(math.log10(tokens))
             token_template = '[UNUSED%%0%sd]' % digits

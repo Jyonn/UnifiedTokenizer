@@ -1,3 +1,5 @@
+from typing import Dict
+
 from smartify import E
 
 from .vocab import Vocab
@@ -11,7 +13,7 @@ class VocabDepotError:
 
 class VocabDepot:
     def __init__(self):
-        self.depot = {}
+        self.depot = {}  # type: Dict[str, Vocab]
         self.col_map = {}
 
     def append(self, col_or_vocab):
@@ -30,7 +32,10 @@ class VocabDepot:
             raise VocabDepotError.ConflictName(vocab.name)
         self.depot[vocab.name] = vocab
 
-    def get_vocab(self, name):
+    def get_vocab(self, name) -> Vocab:
         if name in self.depot:
             return self.depot[name]
         raise VocabDepotError.NotFound(name)
+
+    def __call__(self, name) -> Vocab:
+        return self.get_vocab(name)

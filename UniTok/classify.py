@@ -1,9 +1,24 @@
-import copy
-
-
 class Classify:
+    def dict_list(self, l: list):
+        new_l = []
+        for v in l:
+            if isinstance(v, Classify):
+                v = v.dict()
+            elif isinstance(v, list):
+                v = self.dict_list(v)
+            new_l.append(v)
+        return new_l
+
     def dict(self):
-        return self.__d
+        d = dict()
+        for k in self.d:
+            if isinstance(self.d[k], list):
+                d[k] = self.dict_list(self.d[k])
+            elif isinstance(self.d[k], Classify):
+                d[k] = self.d[k].dict()
+            else:
+                d[k] = self.d[k]
+        return d
 
     def iter_list(self, l: list):
         new_l = []
@@ -24,14 +39,13 @@ class Classify:
         return d
 
     def __init__(self, d: dict):
-        self.__d = copy.deepcopy(d)
         self.d = self.iter_dict(d)
 
     def __getattr__(self, item):
         return self.d[item]
 
     def __setattr__(self, key, value):
-        if key in ['d', '_Classify__d']:
+        if key in ['d']:
             object.__setattr__(self, key, value)
         else:
             if isinstance(value, dict):
@@ -40,4 +54,5 @@ class Classify:
 
 
 if __name__ == '__main__':
-    print(Classify(dict(a=1, b=dict(x='a', y=[3,4]))).dict())
+    c = Classify(dict(a=1, b=dict(x='a', y=[3, [4, dict(y='l')], dict(z=1)])))
+    print(c.b.y[1][1].y)
