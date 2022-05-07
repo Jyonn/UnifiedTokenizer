@@ -14,7 +14,7 @@ class LengthAnalysis:
     def analyse(self):
         max_length = max(self.lengths)
         min_length = min(self.lengths)
-        avg_length = sum(self.lengths) // len(self.lengths)
+        avg_length = '%.4f' % (sum(self.lengths) * 1.0 / len(self.lengths))
         print('[ MIN:', min_length, ']')
         print('[ MAX:', max_length, ']')
         print('[ AVG:', avg_length, ']')

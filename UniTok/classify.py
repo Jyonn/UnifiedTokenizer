@@ -1,4 +1,30 @@
 class Classify:
+    class NoneClassify:
+        d = dict()
+
+        def dict(self):
+            return dict()
+
+        def __iter__(self):
+            return iter(dict())
+
+        def __contains__(self, item):
+            return False
+
+        def __getitem__(self, item):
+            return self
+
+        def __getattr__(self, item):
+            return self
+
+        def __setattr__(self, key, value):
+            return
+
+        def __bool__(self):
+            return False
+
+    none = NoneClassify()
+
     def dict_list(self, l: list):
         new_l = []
         for v in l:
@@ -38,19 +64,27 @@ class Classify:
                 d[k] = self.iter_list(d[k])
         return d
 
+    def __iter__(self):
+        return iter(self.d.items())
+
     def __init__(self, d: dict):
-        self.d = self.iter_dict(d)
+        object.__setattr__(self, 'd', self.iter_dict(d))
+
+    def __contains__(self, item):
+        return item in self.d
+
+    def __getitem__(self, item):
+        if item in self.d:
+            return self.d[item]
+        return self.none
 
     def __getattr__(self, item):
-        return self.d[item]
+        return self[item]
 
     def __setattr__(self, key, value):
-        if key in ['d']:
-            object.__setattr__(self, key, value)
-        else:
-            if isinstance(value, dict):
-                value = Classify(value)
-            self.d[key] = value
+        if isinstance(value, dict):
+            value = Classify(value)
+        self.d[key] = value
 
 
 if __name__ == '__main__':

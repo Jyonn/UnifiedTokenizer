@@ -6,8 +6,8 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='UniTok',
-    version='2.2.2.2',
-    keywords=('token', 'tokenizer', 'bert'),
+    version='2.3.0.2',
+    keywords=['token', 'tokenizer', 'bert'],
     description='Unified Tokenizer',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -18,10 +18,10 @@ setup(
     platforms='any',
     packages=find_packages(),
     install_requires=[
-        'smartify==0.0.2',
         'termplot==0.0.2',
         'tqdm',
         'numpy',
-        'pandas'
+        'pandas',
+        'transformers',
     ],
 )

@@ -15,7 +15,7 @@ from UniTok.vocab.vocab import Vocab
 
 
 class UniTok:
-    VER = 'v2.2'
+    VER = 'v2.3'
 
     def __init__(self):
         self.cols = dict()  # type: Dict[str, Column]

@@ -4,10 +4,11 @@ from UniTok.vocab.vocab import Vocab
 
 
 class BaseTok:
-    def __init__(self, name: str, vocab: Optional[Vocab] = None):
+    def __init__(self, name: str, vocab: Optional[Vocab] = None, pre_handler=None):
         self.PAD = 0
         self.name = name
         self.vocab = vocab or Vocab(name)
+        self.pre_handler = pre_handler
 
     def t(self, obj) -> [int, list]:
         raise NotImplementedError

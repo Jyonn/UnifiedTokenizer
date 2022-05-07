@@ -18,7 +18,7 @@ class UniDep:
         self.meta_data = Classify(json.load(open(self.meta_path)))
 
         if self.meta_data.version != UniTok.VER:
-            print('UniTok version not match, it may occur unexpected errors in loading phase!')
+            print('UniTok version not match, it may occur unexpected errors when loading!')
 
         self.data_path = os.path.join(self.store_dir, 'data.npy')
         self.data = np.load(self.data_path, allow_pickle=True)
@@ -28,8 +28,8 @@ class UniDep:
             print(err)
 
         self.id_col = self.meta_data.id_col
-        self.id_vocab = self.meta_data.col_info.d[self.id_col].vocab
-        self.sample_size = self.meta_data.vocab_info.d[self.id_vocab].size
+        self.id_vocab = self.meta_data.col_info[self.id_col].vocab
+        self.sample_size = self.meta_data.vocab_info[self.id_vocab].size
         print('Loaded', self.sample_size, 'samples!')
 
         data_sample_size = len(self.data[self.id_col])
@@ -41,7 +41,7 @@ class UniDep:
         self.vocab_info = self.meta_data.vocab_info
 
         self.vocab_depot = VocabDepot()
-        for vocab_name in self.vocab_info.d:
+        for vocab_name, _ in self.vocab_info:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocab_depot.depot[self.id_vocab].obj2index
 
@@ -50,8 +50,8 @@ class UniDep:
 
     @staticmethod
     def merge_col(c1: Classify, c2: Classify):
-        for col_name in c2.d:
-            if col_name in c1.d and c1.d[col_name].dict() != c2.d[col_name].dict():
+        for col_name, col_data in c2:
+            if col_name in c1 and c1[col_name].dict() != col_data.dict():
                 raise ValueError('Column Config Conflict In Key {}'.format(col_name))
         d = c1.dict()
         d.update(c2.dict())
@@ -59,8 +59,8 @@ class UniDep:
 
     @staticmethod
     def merge_vocab(c1: Classify, c2: Classify):
-        for vocab_name in c2.d:
-            if vocab_name in c1.d and c1.d[vocab_name].size != c2.d[vocab_name].size:
+        for vocab_name, vocab_data in c2:
+            if vocab_name in c1 and c1[vocab_name].size != vocab_data.size:
                 raise ValueError('Vocab Config Conflict In Key {}'.format(vocab_name))
         d = c1.dict()
         d.update(c2.dict())
@@ -80,18 +80,18 @@ class UniDep:
             self.meta_data.vocab_info = self.vocab_info
 
     def is_list_col(self, col_name):
-        return 'max_length' in self.col_info.d[col_name].d
+        return 'max_length' in self.col_info[col_name]
 
     def get_vocab_size(self, col_name, as_vocab=False):
         vocab_id = col_name if as_vocab else self.get_vocab(col_name)
-        return self.vocab_info.d[vocab_id].size
+        return self.vocab_info[vocab_id].size
 
     def get_vocab(self, col_name):
-        return self.col_info.d[col_name].vocab
+        return self.col_info[col_name].vocab
 
     def get_max_length(self, col_name):
         if self.is_list_col(col_name):
-            return self.col_info.d[col_name].max_length
+            return self.col_info[col_name].max_length
 
     def get_sample_by_id(self, obj_id):
         return self.pack_sample(self.id2index[obj_id])
@@ -104,7 +104,7 @@ class UniDep:
 
     def pack_sample(self, index):
         sample = dict()
-        for col_name in self.col_info.d:
+        for col_name, _ in self.col_info:
             if col_name in self.data:
                 sample[col_name] = self.data[col_name][index]
                 if col_name in self.union_depots:
@@ -118,3 +118,9 @@ class UniDep:
 
     def __len__(self):
         return self.sample_size
+
+    def __str__(self):
+        return f'UniDep from {self.store_dir}'
+
+    def __repr__(self):
+        return str(self)

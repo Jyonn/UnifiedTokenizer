@@ -1,16 +1,8 @@
-import collections
 import math
 import os
-from typing import Union, List, Optional
+from typing import Union, List
 
 import numpy as np
-from smartify import E
-
-
-@E.register(id_processor=E.idp_cls_prefix())
-class VocabError:
-    NotEditable = E('Vocab {} is not editable, but new word [{}] appears')
-    NotEmptyForReserve = E('Vocab {} is not empty and not allowed reserve operation')
 
 
 class Vocab:
@@ -111,7 +103,7 @@ class Vocab:
             if not self.editable:
                 if self.oov_default is not None:
                     return self.oov_default
-                raise VocabError.NotEditable(self.name, obj)
+                raise ValueError(f'Vocab {self.name} is not editable, but new word [{obj}] appears')
             index = len(self.index2obj)
             self.obj2index[obj] = index
             self.index2obj[index] = obj
@@ -119,7 +111,7 @@ class Vocab:
 
     def reserve(self, tokens: Union[int, List[any]]):
         if self.get_size():
-            raise VocabError.NotEmptyForReserve(self.name)
+            raise ValueError(f'Vocab {self.name} is not empty and not allowed reserve operation')
 
         self.reserve_tokens = tokens
         if isinstance(tokens, int):

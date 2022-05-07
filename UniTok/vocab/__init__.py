@@ -1,7 +1,6 @@
-from .vocab import Vocab, VocabError
-from .depot import VocabDepot, VocabDepotError
+from .vocab import Vocab
+from .depot import VocabDepot
 
 __all__ = [
-    Vocab, VocabError,
-    VocabDepot, VocabDepotError
+    Vocab, VocabDepot
 ]
