@@ -82,6 +82,9 @@ class Classify:
         return self[item]
 
     def __setattr__(self, key, value):
+        self[key] = value
+
+    def __setitem__(self, key, value):
         if isinstance(value, dict):
             value = Classify(value)
         self.d[key] = value
