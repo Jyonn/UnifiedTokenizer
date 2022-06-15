@@ -28,8 +28,8 @@ class UniDep:
             print(err)
 
         self.id_col = self.meta_data.id_col
-        self.id_vocab = self.meta_data.col_info[self.id_col].vocab
-        self.sample_size = self.meta_data.vocab_info[self.id_vocab].size
+        self.id_vocab = self.get_vocab(self.id_col)
+        self.sample_size = self.get_vocab_size(self.id_col)
         print('Loaded', self.sample_size, 'samples!')
 
         data_sample_size = len(self.data[self.id_col])
@@ -43,13 +43,13 @@ class UniDep:
         self.vocab_depot = VocabDepot()
         for vocab_name, _ in self.vocab_info:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
-        self.id2index = self.vocab_depot.depot[self.id_vocab].obj2index
+        self.id2index = self.vocab_depot[self.id_vocab].obj2index
 
         self.index_order = list(range(self.sample_size))
         self.union_depots = dict()  # type: Dict[str, List[UniDep]]
 
     @staticmethod
-    def merge_col(c1: Classify, c2: Classify):
+    def _merge_col(c1: Classify, c2: Classify):
         for col_name, col_data in c2:
             if col_name in c1 and c1[col_name].dict() != col_data.dict():
                 raise ValueError('Column Config Conflict In Key {}'.format(col_name))
@@ -58,7 +58,7 @@ class UniDep:
         return Classify(d)
 
     @staticmethod
-    def merge_vocab(c1: Classify, c2: Classify):
+    def _merge_vocab(c1: Classify, c2: Classify):
         for vocab_name, vocab_data in c2:
             if vocab_name in c1 and c1[vocab_name].size != vocab_data.size:
                 raise ValueError('Vocab Config Conflict In Key {}'.format(vocab_name))
@@ -74,8 +74,8 @@ class UniDep:
             if depot.id_col not in self.union_depots:
                 self.union_depots[depot.id_col] = []
             self.union_depots[depot.id_col].append(depot)
-            self.col_info = self.merge_col(self.col_info, depot.col_info)
-            self.vocab_info = self.merge_vocab(self.vocab_info, depot.vocab_info)
+            self.col_info = self._merge_col(self.col_info, depot.col_info)
+            self.vocab_info = self._merge_vocab(self.vocab_info, depot.vocab_info)
             self.meta_data.col_info = self.col_info
             self.meta_data.vocab_info = self.vocab_info
 

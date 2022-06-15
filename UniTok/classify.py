@@ -23,6 +23,9 @@ class Classify:
         def __bool__(self):
             return False
 
+        def __str__(self):
+            raise ValueError('NoneClassify')
+
     none = NoneClassify()
 
     def dict_list(self, l: list):

@@ -1,7 +1,5 @@
 from typing import Dict
 
-from smartify import E
-
 from .vocab import Vocab
 
 
@@ -23,13 +21,14 @@ class VocabDepot:
 
         assert vocab.name is not None
         if vocab.name in self.depot and self.depot[vocab.name] != vocab:
-            raise f'Conflict name: {vocab.name}'
+            raise ValueError(f'Conflict name: {vocab.name}')
         self.depot[vocab.name] = vocab
 
     def get_vocab(self, name) -> Vocab:
-        if name in self.depot:
-            return self.depot[name]
-        raise f'Not found vocab {name}'
+        return self[name]
 
     def __call__(self, name) -> Vocab:
-        return self.get_vocab(name)
+        return self[name]
+
+    def __getitem__(self, name) -> Vocab:
+        return self.depot[name]

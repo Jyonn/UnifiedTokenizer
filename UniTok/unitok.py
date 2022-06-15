@@ -11,7 +11,6 @@ from .tok.entity_tok import EntTok
 from .tok.id_tok import IdTok
 from .tok.tokenizer import ListTokenizer
 from UniTok.vocab.depot import VocabDepot
-from UniTok.vocab.vocab import Vocab
 
 
 class UniTok:
@@ -57,8 +56,7 @@ class UniTok:
         return self.data[col.name]
 
     def analyse(self):
-        for name in self.vocab_depot.depot:
-            vocab = self.vocab_depot.get_vocab(name)
+        for vocab in self.vocab_depot.depot.values():
             vocab.init_frequency()
 
         print('[ COLUMNS ]')
@@ -69,8 +67,8 @@ class UniTok:
             print()
 
         print('[ VOCABS ]')
-        for vocab_name in self.vocab_depot.col_map:  # type: Vocab
-            vocab = self.vocab_depot.depot[vocab_name]
+        for vocab_name in self.vocab_depot.col_map:  # type: str
+            vocab = self.vocab_depot[vocab_name]
             print('[ VOC:', vocab.name, 'with ', vocab.get_size(), 'tokens ]')
             print('[ COL:', ', '.join(self.vocab_depot.col_map[vocab_name]), ']')
             frequency_dict = vocab.frequency_analyse()
@@ -96,12 +94,11 @@ class UniTok:
         os.makedirs(store_dir, exist_ok=True)
 
         vocab_info = dict()
-        for vocab_name in self.vocab_depot.depot:
-            vocab = self.vocab_depot.depot[vocab_name]
+        for vocab in self.vocab_depot.depot.values():
             vocab.save(store_dir)
-            vocab_info[vocab_name] = dict(
+            vocab_info[vocab.name] = dict(
                 size=vocab.get_size(),
-                cols=self.vocab_depot.col_map[vocab_name],
+                cols=self.vocab_depot.col_map[vocab.name],
             )
 
         data = dict()
