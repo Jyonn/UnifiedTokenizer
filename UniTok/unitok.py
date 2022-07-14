@@ -42,6 +42,7 @@ class UniTok:
         if self.id_col:
             raise ValueError('Already has id column before adding IndexColumn!')
         self.id_col = col
+        return self
 
     def read_file(self, df, sep=None):
         if isinstance(df, str):

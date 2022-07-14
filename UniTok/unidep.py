@@ -27,6 +27,9 @@ class UniDep:
         except Exception as err:
             print(err)
 
+        self.col_info = self.meta_data.col_info
+        self.vocab_info = self.meta_data.vocab_info
+
         self.id_col = self.meta_data.id_col
         self.id_vocab = self.get_vocab(self.id_col)
         self.sample_size = self.get_vocab_size(self.id_col)
@@ -36,9 +39,6 @@ class UniDep:
         if self.sample_size != data_sample_size:
             print('Resize sample size to', data_sample_size)
             self.sample_size = data_sample_size
-
-        self.col_info = self.meta_data.col_info
-        self.vocab_info = self.meta_data.vocab_info
 
         self.vocab_depot = VocabDepot()
         for vocab_name, _ in self.vocab_info:
