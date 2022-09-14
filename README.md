@@ -2,23 +2,26 @@
 
 ## Introduction
 
-When dealing with textual information used in some models (e.g. Bert), the first step is the tokenization. [**Transformers**](https://github.com/huggingface/transformers) provides _BertTokenizer_ to split words (multi-lingual) with _WordPiece_ algorithm. However, in some cases, some texts may be entities which is not required to split, although this entity contains many sub-words; some are the arrays of entities, joined by some characters (e.g. `|`, `,`). 
+Unified Tokenizer, shortly **UniTok**, 
+offers pre-defined various tokenizers in dealing with textual data. 
+It is a central data processing tool 
+that allows algorithm engineers to focus more on the algorithm itself 
+instead of tedious data preprocessing.
 
-**Different cases require different tokenizer.** So it comes **Unified Tokenizer** (or **UniTok**). You can either customize your tokenizer, or use our pre-defined tokenizers.
+It incorporates the BERT tokenizer from the [transformers]((https://github.com/huggingface/transformers)) library, 
+while it supports custom via the general word segmentation module (i.e., the `BaseTok` class).
 
 ## Installation
 
-`pip install UniTok`
+`pip install UnifiedTokenizer`
 
 ## Usage
 
-Here we use the first 10 lines of the training set of [MINDlarge](https://msnews.github.io/) as an example (see `news-sample.tsv` file). Assume the data path is `/home/ubuntu/news-sample.tsv`.
+We use the head of the training set of the [MINDlarge](https://msnews.github.io/) dataset as an example (see `news-sample.tsv` file).
 
 ### Data Declaration (more info see [MIND GitHub](https://github.com/msnews/msnews.github.io/blob/master/assets/doc/introduction.md))
 
-Each line in the file is the information about one piece of news.
-
-It has 7 columns, which are divided by the tab symbol:
+Each line in the file is a piece of news, including 7 features, which are divided by the tab (`\t`) symbol:
 
 - News ID
 - Category
@@ -27,9 +30,18 @@ It has 7 columns, which are divided by the tab symbol:
 - Abstract
 - URL
 - Title Entities (entities contained in the title of this news)
-- Abstract Entities (entites contained in the abstract of this news) 
+- Abstract Entities (entities contained in the abstract of this news) 
 
 We only use its first 5 columns for demonstration.
+
+### Pre-defined Tokenizers
+
+| Tokenizer | Description                                                           | Parameters  |
+|-----------|-----------------------------------------------------------------------|-------------|
+| BertTok   | Provided by the ``transformers` library, using the WordPiece strategy | `vocab_dir` |
+| EntTok    | The column data is regarded as an entire token                        | /           |
+| IdTok     | A specific version of EntTok, required to be identical                | /           |
+| SplitTok  | Tokens are joined by separators like tab, space                       | `sep`       |
 
 ### Imports
 
@@ -38,39 +50,32 @@ import pandas as pd
 
 
 from UniTok import UniTok, Column
-from UniTok.tok import IdTok, EntTok, BertTok, SingT, ListT
+from UniTok.tok import IdTok, EntTok, BertTok
 ```
 
 ### Read data
 
 ```python
 df = pd.read_csv(
-    filepath_or_buffer='/home/ubuntu/news-sample.tsv',
+    filepath_or_buffer='path/news-sample.tsv',
     sep='\t',
     names=['nid', 'cat', 'subCat', 'title', 'abs', 'url', 'titEnt', 'absEnt'],
     usecols=['nid', 'cat', 'subCat', 'title', 'abs'],
 )
 ```
 
-### Initialize Tokenizers
+### Construct UniTok
 
 ```python
-id_tok = IdTok(name='news')  # for news id
-cat_tok = EntTok(name='cat')  # for category & subcategory
-txt_tok = BertTok(name='english', vocab_dir='bert-base-uncased')  # for title & abstract
-cat_tok.vocab.reserve(100)  # first 100 tokens are reserved for some special usage in the downstream model, if any, and please be reminded that the first token is always PAD
-```
+from UniTok import UniTok, Column
+from UniTok.tok import EntTok, BertTok
 
-### Construct Unified Tokenizer
+cat_tok = EntTok(name='cat')  # one tokenizer for both cat and subCat
+text_tok = BertTok(name='english', vocab_dir='bert-base-uncased')  # specify the bert vocab
 
-_SingleTokenizer_ means it only omits one token id, while _ListTokenizer_ generates a sequence of ids.
-
-```python
-ut = UniTok()
-ut.add_col(Column(
-    name='nid',
-    tokenizer=id_tok.as_sing(),
-)).add_col(Column(
+unitok = UniTok().add_index_col(
+    name='nid'
+).add_col(Column(
     name='cat',
     tokenizer=cat_tok.as_sing()
 )).add_col(Column(
@@ -78,19 +83,17 @@ ut.add_col(Column(
     tokenizer=cat_tok.as_sing(),
 )).add_col(Column(
     name='title',
-    tokenizer=txt_tok.as_list(),
+    tokenizer=text_tok.as_list(),
 )).add_col(Column(
     name='abs',
-    tokenizer=txt_tok.as_list(),
+    tokenizer=text_tok.as_list(),
 )).read_file(df)
 ```
-
-Here we leave the _max_length_ of the output of the _ListTokenizer_ behind.
 
 ### Analyse Data
 
 ```python
-ut.analyse()
+unitok.analyse()
 ```
 
 It shows the distribution of the length of each column (if using _ListTokenizer_). It will help us determine the _max_length_ of the tokens for each column.
@@ -161,11 +164,9 @@ It shows the distribution of the length of each column (if using _ListTokenizer_
 ### ReConstruct Unified Tokenizer
 
 ```python
-ut = UniTok()
-ut.add_col(Column(
-    name='nid',
-    tokenizer=id_tok.as_sing(),
-)).add_col(Column(
+unitok = UniTok().add_index_col(
+    name='nid'
+).add_col(Column(
     name='cat',
     tokenizer=cat_tok.as_sing()
 )).add_col(Column(
@@ -173,10 +174,10 @@ ut.add_col(Column(
     tokenizer=cat_tok.as_sing(),
 )).add_col(Column(
     name='title',
-    tokenizer=txt_tok.as_list(max_length=10),
+    tokenizer=text_tok.as_list(max_length=10),
 )).add_col(Column(
     name='abs',
-    tokenizer=txt_tok.as_list(max_length=30),
+    tokenizer=text_tok.as_list(max_length=30),
 )).read_file(df)
 ```
 
@@ -185,6 +186,6 @@ In this step, we set _max_length_ of each column. If _max_length_ is not set, we
 ### Tokenize and Store
 
 ```python
-ut.tokenize()
-ut.store_data('TokenizedData')
+unitok.tokenize()
+unitok.store_data('TokenizedData')
 ```
