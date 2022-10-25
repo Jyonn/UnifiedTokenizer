@@ -4,9 +4,9 @@ import random
 from typing import Dict, List
 
 import numpy as np
+from oba import Obj
 
 from .unitok import UniTok
-from .classify import Classify
 from .vocab import VocabDepot, Vocab
 
 
@@ -15,7 +15,7 @@ class UniDep:
         self.store_dir = os.path.expanduser(store_dir)
 
         self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
-        self.meta_data = Classify(json.load(open(self.meta_path)))
+        self.meta_data = Obj(json.load(open(self.meta_path)))
 
         if self.meta_data.version != UniTok.VER:
             print('UniTok version not match, it may occur unexpected errors when loading!')
@@ -41,7 +41,7 @@ class UniDep:
             self.sample_size = data_sample_size
 
         self.vocab_depot = VocabDepot()
-        for vocab_name, _ in self.vocab_info:
+        for vocab_name in self.vocab_info:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocab_depot[self.id_vocab].obj2index
 
@@ -49,26 +49,28 @@ class UniDep:
         self.union_depots = dict()  # type: Dict[str, List[UniDep]]
 
     @staticmethod
-    def _merge_col(c1: Classify, c2: Classify):
-        for col_name, col_data in c2:
-            if col_name in c1 and c1[col_name].dict() != col_data.dict():
+    def _merge_col(c1: Obj, c2: Obj):
+        for col_name in c2:
+            col_data = c2[col_name]
+            if col_name in c1 and Obj.raw(c1[col_name]) != Obj.raw(col_data):
                 raise ValueError('Column Config Conflict In Key {}'.format(col_name))
-        d = c1.dict()
-        d.update(c2.dict())
-        return Classify(d)
+        d = Obj.raw(c1)
+        d.update(Obj.raw(c2))
+        return Obj(d)
 
     @staticmethod
-    def _merge_vocab(c1: Classify, c2: Classify):
-        for vocab_name, vocab_data in c2:
+    def _merge_vocab(c1: Obj, c2: Obj):
+        for vocab_name in c2:
+            vocab_data = c2[vocab_name]
             if vocab_name in c1 and c1[vocab_name].size != vocab_data.size:
                 raise ValueError('Vocab Config Conflict In Key {}'.format(vocab_name))
-        d = c1.dict()
-        d.update(c2.dict())
-        return Classify(d)
+        d = Obj.raw(c1)
+        d.update(Obj.raw(c2))
+        return Obj(d)
 
     def union(self, *depots: 'UniDep'):
         for depot in depots:
-            if depot.id_col not in self.col_info.d:
+            if depot.id_col not in self.col_info:
                 raise ValueError('Current Depot Has No Column Named {}'.format(depot.id_col))
 
             if depot.id_col not in self.union_depots:
@@ -104,7 +106,7 @@ class UniDep:
 
     def pack_sample(self, index):
         sample = dict()
-        for col_name, _ in self.col_info:
+        for col_name in self.col_info:
             if col_name in self.data:
                 sample[col_name] = self.data[col_name][index]
                 if col_name in self.union_depots:

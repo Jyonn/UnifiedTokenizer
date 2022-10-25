@@ -4,7 +4,6 @@ from .vocab.depot import VocabDepot
 from .column import Column
 from .analysis import LengthAnalysis, Plot
 from .unidep import UniDep
-from .classify import Classify
 from .global_setting import Global
 
 __all__ = [
@@ -17,6 +16,5 @@ __all__ = [
     analysis,
     Vocab,
     VocabDepot,
-    Classify,
     Global,
 ]
