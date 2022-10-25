@@ -17,6 +17,3 @@ class BertTok(BaseTok):
         else:
             ids = []
         return ids
-
-    def get_vocabs(self):
-        return self.tokenizer.vocab

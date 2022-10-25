@@ -63,7 +63,7 @@ class UniDep:
         for vocab_name in c2:
             vocab_data = c2[vocab_name]
             if vocab_name in c1 and c1[vocab_name].size != vocab_data.size:
-                raise ValueError('Vocab Config Conflict In Key {}'.format(vocab_name))
+                raise ValueError('vocab config conflict in key {}'.format(vocab_name))
         d = Obj.raw(c1)
         d.update(Obj.raw(c2))
         return Obj(d)
@@ -71,7 +71,7 @@ class UniDep:
     def union(self, *depots: 'UniDep'):
         for depot in depots:
             if depot.id_col not in self.col_info:
-                raise ValueError('Current Depot Has No Column Named {}'.format(depot.id_col))
+                raise ValueError('current depot has no column named {}'.format(depot.id_col))
 
             if depot.id_col not in self.union_depots:
                 self.union_depots[depot.id_col] = []

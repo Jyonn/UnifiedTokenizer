@@ -1,13 +1,15 @@
-from typing import Optional
-
 from UniTok.vocab.vocab import Vocab
 
 
 class BaseTok:
-    def __init__(self, name: str, vocab: Optional[Vocab] = None, pre_handler=None):
+    def __init__(self, name: str = None, vocab: Vocab = None, pre_handler=None):
         self.PAD = 0
-        self.name = name
-        self.vocab = vocab or Vocab(name)
+        assert name or vocab, ValueError('name and vocab can not both be null')
+
+        if vocab:
+            self.vocab = vocab
+        else:
+            self.vocab = Vocab(name)
         self.pre_handler = pre_handler
 
     def t(self, obj) -> [int, list]:

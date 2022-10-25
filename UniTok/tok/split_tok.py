@@ -4,8 +4,8 @@ from .tok import BaseTok
 
 
 class SplitTok(BaseTok):
-    def __init__(self, name, sep, **kwargs):
-        super(SplitTok, self).__init__(name=name, **kwargs)
+    def __init__(self, sep, **kwargs):
+        super(SplitTok, self).__init__(**kwargs)
         self.sep = sep
 
     def t(self, obj,):
