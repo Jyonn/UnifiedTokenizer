@@ -42,11 +42,11 @@ class UniDep:
         self.id_col = self.meta_data.id_col
         self.id_vocab = self.get_vocab(self.id_col)
         self.sample_size = self.get_vocab_size(self.id_col)
-        print('Loaded', self.sample_size, 'samples!')
+        print('loaded', self.sample_size, 'samples!')
 
         data_sample_size = len(self.data[self.id_col])
         if self.sample_size != data_sample_size:
-            print('Resize sample size to', data_sample_size)
+            print('resize sample_size to', data_sample_size)
             self.sample_size = data_sample_size
 
         self.vocab_depot = VocabDepot()
@@ -89,9 +89,15 @@ class UniDep:
             self.vocab_info = self._merge_vocab(self.vocab_info, depot.vocab_info)
             self.meta_data.col_info = self.col_info
             self.meta_data.vocab_info = self.vocab_info
+        return self
 
-    def filter(self, filter_func):
-        self._visible_indexes = [i for i in range(self.sample_size) if filter_func(self[i])]
+    def filter(self, filter_func, col=None):
+        visible_indexes = []
+        for index in self._visible_indexes:
+            target = self[index][col] if col else self[index]
+            if filter_func(target):
+                visible_indexes.append(index)
+        self._visible_indexes = visible_indexes
         self.sample_size = len(self._visible_indexes)
         return self
 

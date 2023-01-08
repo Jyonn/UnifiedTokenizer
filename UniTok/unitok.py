@@ -125,8 +125,9 @@ class UniTok:
                     padding=col.tokenizer.padding,
                 ))
 
+        from UniTok import UniDep
         meta_data = dict(
-            version=UniTok.VER,
+            version=UniDep.VER,
             vocab_info=vocab_info,
             col_info=col_info,
             id_col=self.id_col.name,
