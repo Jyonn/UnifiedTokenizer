@@ -1,24 +1,33 @@
 import json
 import os
 import random
+import warnings
 from typing import Dict, List
 
 import numpy as np
 from oba import Obj
 
-from .unitok import UniTok
 from .vocab import VocabDepot, Vocab
 
 
 class UniDep:
+    VER = 'UniDep-1.0'
+
     def __init__(self, store_dir):
         self.store_dir = os.path.expanduser(store_dir)
 
         self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
         self.meta_data = Obj(json.load(open(self.meta_path)))
 
-        if self.meta_data.version != UniTok.VER:
-            print('UniTok version not match, it may occur unexpected errors when loading!')
+        if self.meta_data.version.startswith('UniDep'):
+            if self.meta_data.version != UniDep.VER:
+                raise ValueError(
+                    'UniDep version mismatch, '
+                    'current version: {}, '
+                    'depot version: {}. '
+                    'It may cause unexpected error.'.format(
+                        UniDep.VER, self.meta_data.version
+                    ))
 
         self.data_path = os.path.join(self.store_dir, 'data.npy')
         self.data = np.load(self.data_path, allow_pickle=True)
@@ -45,7 +54,7 @@ class UniDep:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocab_depot[self.id_vocab].obj2index
 
-        self.index_order = list(range(self.sample_size))
+        self._visible_indexes = list(range(self.sample_size))
         self.union_depots = dict()  # type: Dict[str, List[UniDep]]
 
     @staticmethod
@@ -81,6 +90,11 @@ class UniDep:
             self.meta_data.col_info = self.col_info
             self.meta_data.vocab_info = self.vocab_info
 
+    def filter(self, filter_func):
+        self._visible_indexes = [i for i in range(self.sample_size) if filter_func(self[i])]
+        self.sample_size = len(self._visible_indexes)
+        return self
+
     def is_list_col(self, col_name):
         return 'max_length' in self.col_info[col_name]
 
@@ -99,10 +113,11 @@ class UniDep:
         return self.pack_sample(self.id2index[obj_id])
 
     def shuffle(self, shuffle=True):
+        warnings.warn('shuffle is deprecated, data shuffle is more encouraged in the data loader', DeprecationWarning)
         if shuffle:
-            random.shuffle(self.index_order)
+            random.shuffle(self._visible_indexes)
         else:
-            self.index_order = list(range(self.sample_size))
+            self._visible_indexes = list(range(self.sample_size))
 
     def pack_sample(self, index):
         sample = dict()
@@ -115,7 +130,7 @@ class UniDep:
         return sample
 
     def __getitem__(self, index):
-        index = self.index_order[index]
+        index = self._visible_indexes[index]
         return self.pack_sample(index)
 
     def __len__(self):

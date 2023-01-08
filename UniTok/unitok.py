@@ -14,7 +14,7 @@ from UniTok.vocab.depot import VocabDepot
 
 
 class UniTok:
-    VER = 'v2.3'
+    VER = 'v2.4'
 
     def __init__(self):
         self.cols = dict()  # type: Dict[str, Column]
