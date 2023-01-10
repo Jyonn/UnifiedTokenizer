@@ -5,6 +5,7 @@ import warnings
 from typing import Dict, List
 
 import numpy as np
+import tqdm
 from oba import Obj
 
 from .vocab import VocabDepot, Vocab
@@ -13,8 +14,9 @@ from .vocab import VocabDepot, Vocab
 class UniDep:
     VER = 'UniDep-1.0'
 
-    def __init__(self, store_dir):
+    def __init__(self, store_dir, silent=False):
         self.store_dir = os.path.expanduser(store_dir)
+        self.silent = silent
 
         self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
         self.meta_data = Obj(json.load(open(self.meta_path)))
@@ -35,6 +37,7 @@ class UniDep:
             self.data = self.data.item()  # type: dict
         except Exception as err:
             print(err)
+            return
 
         self.col_info = self.meta_data.col_info
         self.vocab_info = self.meta_data.vocab_info
@@ -42,11 +45,11 @@ class UniDep:
         self.id_col = self.meta_data.id_col
         self.id_vocab = self.get_vocab(self.id_col)
         self.sample_size = self.get_vocab_size(self.id_col)
-        print('loaded', self.sample_size, 'samples!')
+        self.print('loaded', self.sample_size, 'samples!')
 
         data_sample_size = len(self.data[self.id_col])
         if self.sample_size != data_sample_size:
-            print('resize sample_size to', data_sample_size)
+            self.print('resize sample_size to', data_sample_size)
             self.sample_size = data_sample_size
 
         self.vocab_depot = VocabDepot()
@@ -56,6 +59,11 @@ class UniDep:
 
         self._visible_indexes = list(range(self.sample_size))
         self.union_depots = dict()  # type: Dict[str, List[UniDep]]
+
+    def print(self, *args, **kwargs):
+        if self.silent:
+            return
+        print(*args, **kwargs)
 
     @staticmethod
     def _merge_col(c1: Obj, c2: Obj):
@@ -93,10 +101,10 @@ class UniDep:
 
     def filter(self, filter_func, col=None):
         visible_indexes = []
-        for index in self._visible_indexes:
-            target = self[index][col] if col else self[index]
+        for sample in tqdm.tqdm(self, disable=self.silent):
+            target = sample[col] if col else sample
             if filter_func(target):
-                visible_indexes.append(index)
+                visible_indexes.append(sample[self.id_col])
         self._visible_indexes = visible_indexes
         self.sample_size = len(self._visible_indexes)
         return self
