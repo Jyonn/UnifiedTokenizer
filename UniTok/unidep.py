@@ -99,9 +99,11 @@ class UniDep:
             self.meta_data.vocab_info = self.vocab_info
         return self
 
-    def filter(self, filter_func, col=None):
+    def filter(self, filter_func, col=None, inherit=False):
         visible_indexes = []
-        for sample in tqdm.tqdm(self, disable=self.silent):
+        iterator = self.data[col] if inherit and col else self
+
+        for sample in tqdm.tqdm(iterator, disable=self.silent):
             target = sample[col] if col else sample
             if filter_func(target):
                 visible_indexes.append(sample[self.id_col])
