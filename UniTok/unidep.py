@@ -50,10 +50,10 @@ class UniDep:
         self.sample_size = self.get_vocab_size(self.id_col)
         self.print('loaded', self.sample_size, 'samples!')
 
-        data_sample_size = len(self.data[self.id_col])
-        if self.sample_size != data_sample_size:
-            self.print('resize sample_size to', data_sample_size)
-            self.sample_size = data_sample_size
+        self._sample_size = len(self.data[self.id_col])
+        if self.sample_size != self._sample_size:
+            self.print('resize sample_size to', self._sample_size)
+            self.sample_size = self._sample_size
 
         self.vocab_depot = VocabDepot()
         for vocab_name in self.vocab_info:
@@ -151,8 +151,9 @@ class UniDep:
 
     def start_caching(self):
         self.cached = False
-        for sample in self:
-            self.cached_samples.append(sample)
+        self.cached_samples = [None] * self._sample_size
+        for sample in tqdm.tqdm(self, disable=self.silent):
+            self.cached_samples[sample[self.id_col]] = sample
         self.cached = True
 
     def __getitem__(self, index):
