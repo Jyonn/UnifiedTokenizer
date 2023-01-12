@@ -18,6 +18,9 @@ class UniDep:
         self.store_dir = os.path.expanduser(store_dir)
         self.silent = silent
 
+        self.cached = False
+        self.cached_samples = []
+
         self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
         self.meta_data = Obj(json.load(open(self.meta_path)))
 
@@ -99,11 +102,10 @@ class UniDep:
             self.meta_data.vocab_info = self.vocab_info
         return self
 
-    def filter(self, filter_func, col=None, inherit=False):
+    def filter(self, filter_func, col=None):
         visible_indexes = []
-        iterator = self.data[col] if inherit and col else self
 
-        for sample in tqdm.tqdm(iterator, disable=self.silent):
+        for sample in tqdm.tqdm(self, disable=self.silent):
             target = sample[col] if col else sample
             if filter_func(target):
                 visible_indexes.append(sample[self.id_col])
@@ -136,6 +138,8 @@ class UniDep:
             self._visible_indexes = list(range(self.sample_size))
 
     def pack_sample(self, index):
+        if self.cached:
+            return self.cached_samples[index]
         sample = dict()
         for col_name in self.col_info:
             if col_name in self.data:
@@ -144,6 +148,12 @@ class UniDep:
                     for depot in self.union_depots[col_name]:
                         sample.update(depot[sample[col_name]])
         return sample
+
+    def start_caching(self):
+        self.cached = False
+        for sample in self:
+            self.cached_samples.append(sample)
+        self.cached = True
 
     def __getitem__(self, index):
         index = self._visible_indexes[index]
