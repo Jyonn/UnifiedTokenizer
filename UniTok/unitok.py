@@ -58,7 +58,7 @@ class UniTok:
 
     def analyse(self):
         for vocab in self.vocab_depot.depot.values():
-            vocab.init_frequency()
+            vocab.set_count_mode(True)
 
         print('[ COLUMNS ]')
         for col_name in self.cols:
@@ -72,7 +72,7 @@ class UniTok:
             vocab = self.vocab_depot[vocab_name]
             print('[ VOC:', vocab.name, 'with ', vocab.get_size(), 'tokens ]')
             print('[ COL:', ', '.join(self.vocab_depot.col_map[vocab_name]), ']')
-            frequency_dict = vocab.frequency_analyse()
+            frequency_dict = vocab.summarize()
             print('[ FRQ:', frequency_dict, ']')
             print()
         return self

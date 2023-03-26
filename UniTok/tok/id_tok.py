@@ -1,8 +1,8 @@
-from .tok import BaseTok
+from UniTok.tok import EntTok
 
 
-class IdTok(BaseTok):
-    def t(self, obj):
-        if self.pre_handler:
-            obj = self.pre_handler(obj)
-        return self.vocab.append(str(obj))
+class IdTok(EntTok):
+    """
+    Id tokenizer, a special case of Entity tokenizer. Each UniTok instance can only have one IdTok.
+    """
+    pass

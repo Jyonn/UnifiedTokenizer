@@ -17,3 +17,9 @@ class UniWarning:
 
 VocabMapDeprecationWarning = UniWarning(
     'index2obj and obj2index are deprecated, use i2o and o2i instead', type_=DeprecationWarning)
+
+OOVDefaultDeprecationWarning = UniWarning(
+    'oov_default is deprecated, use oov_token instead', type_=DeprecationWarning)
+
+MinFrequencyDeprecationWarning = UniWarning(
+    'min_frequency is deprecated, use min_count instead', type_=DeprecationWarning)

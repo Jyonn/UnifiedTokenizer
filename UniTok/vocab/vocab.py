@@ -4,7 +4,8 @@ from typing import Union, List
 
 import numpy as np
 
-from UniTok.compatible.uni_warnings import VocabMapDeprecationWarning
+from UniTok.compatible.uni_warnings import VocabMapDeprecationWarning, OOVDefaultDeprecationWarning, \
+    MinFrequencyDeprecationWarning
 
 
 class VocabMap(dict):
@@ -24,132 +25,127 @@ class Vocab:
         self.name = name
         self.o2i, self.i2o = VocabMap(), VocabMap()
 
-        self._editable = True
-        self.frequency_mode = False
-        self.oov_default = None
-        self.frequency = {}
-        self.max_frequency = 0
+        self.reserved_tokens = None  # reserved tokens
 
-        self.frequent_vocab = []
-        self.reserve_tokens = None
+        self._editable = True  # whether vocab is editable
+        self._oov_token = None  # out of vocabulary token
+
+        self._count_mode = False  # whether count mode is on
+        self._counter = {}  # counter for counting occurrence of each token
+
+        # self.frequency_mode = False
+        # self.frequency = {}
+        # self.max_frequency = 0
+
+        # self.frequent_vocab = []
+
+    """
+    Basic Methods
+    """
 
     @property
     def obj2index(self) -> VocabMap:
+        """
+        Deprecated, use o2i instead
+        """
         VocabMapDeprecationWarning()
         return self.o2i
 
     @property
     def index2obj(self) -> VocabMap:
+        """
+        Deprecated, use i2o instead
+        """
         VocabMapDeprecationWarning()
         return self.i2o
 
-    def init_frequency(self):
-        self.frequency = {}
-        self.max_frequency = 0
-
-    def frequency_count(self, *ids):
-        for index in ids:
-            if index not in self.frequency:
-                self.frequency[index] = 0
-            self.frequency[index] += 1
-            if self.max_frequency < self.frequency[index]:
-                self.max_frequency = self.frequency[index]
-
-    def trim_vocab(self, min_frequency=1, oov_default=None):
-        self.oov_default = self.oov_default or oov_default
-        self.frequent_vocab = []
-        for index in self.frequency:
-            if self.frequency[index] >= min_frequency:
-                self.frequent_vocab.append(self.i2o[index])
-        self.i2o = dict()
-        self.o2i = dict()
-
-        if self.reserve_tokens is not None:
-            self.reserve(self.reserve_tokens)
-        self.extend(self.frequent_vocab)
-
-        self.frequency_mode = True
-
-    def frequency_analyse(self):
-        max_count = self.max_frequency
-        digits_max = 10
-        while digits_max < max_count:
-            digits_max = digits_max * 10
-
-        bounds = []
-        while digits_max >= 10:
-            digits_min = digits_max // 10
-            left_bound = (np.arange(9)[::-1] + 1) * digits_min
-            right_bound = left_bound + digits_min
-            bounds.extend(zip(left_bound, right_bound))
-            digits_max = digits_min
-        bounds.append((0, 1))
-        bounds.reverse()
-
-        bound_dict = dict()
-        for bound in bounds:
-            bound_dict[bound] = 0
-
-        for index in self.frequency:
-            for bound in bounds:
-                if bound[1] > self.frequency[index] >= bound[0]:
-                    bound_dict[bound] += 1
-                    break
-
-        for bound in bounds:
-            if not bound_dict[bound]:
-                del bound_dict[bound]
-
-        return bound_dict
-
     def extend(self, objs):
-        for obj in objs:
-            self.append(obj)
-        return self
+        """
+        extend vocab with iterable object
+        :return: index list
+        """
+        return [self.append(obj) for obj in objs]
 
-    def append(self, obj) -> int:
-        if obj not in self.o2i:
-            if self.frequency_mode:
-                if self.oov_default is not None:
-                    return self.oov_default
-                return -1
-            if not self._editable:
-                if self.oov_default is not None:
-                    return self.oov_default
-                raise ValueError(f'Vocab {self.name} is not editable, but new word [{obj}] appears')
-            index = len(self.i2o)
-            self.o2i[obj] = index
-            self.i2o[index] = obj
+    def append(self, obj):
+        index = self._append(obj)
+        if self._count_mode and index > -1:
+            self._counter[index] = self._counter.get(index, 0) + 1
+        return index
+
+    def _append(self, obj):
+        """
+        append object to vocab
+        :return: object index
+        """
+        if obj in self.o2i:
+            return self.o2i[obj]
+
+        if self._count_mode:
+            return self._oov_token or -1
+
+        if not self._editable:
+            if self._oov_token is not None:
+                return self._oov_token
+            raise ValueError(f'new token {obj} is not allowed to add to uneditable vocab {self.name}')
+
+        index = len(self.i2o)
+        self.o2i[obj] = index
+        self.i2o[index] = obj
         return self.o2i[obj]
 
     def reserve(self, tokens: Union[int, List[any]]):
+        """
+        set first n tokens as reserved tokens
+        """
         if self.get_size():
-            raise ValueError(f'Vocab {self.name} is not empty and not allowed reserve operation')
+            raise ValueError(f'vocab {self.name} is not empty, can not reserve tokens')
 
-        self.reserve_tokens = tokens
+        self.reserved_tokens = tokens
         if isinstance(tokens, int):
             digits = int(math.log10(tokens))
             token_template = '[UNUSED%%0%sd]' % digits
-            for token in range(tokens):
-                self.append(token_template % token)
-        else:
-            for token in tokens:
-                self.append(token)
+            tokens = [token_template % token for token in range(tokens)]  # [UNUSED000, UNUSED001, ...]
+
+        self.extend(tokens)
         return self
 
     def get_tokens(self):
-        return [self.i2o[i] for i in range(len(self.i2o))]
+        return [self.i2o[i] for i in range(len(self))]
+
+    def get_size(self):
+        return len(self.i2o)
+
+    def __len__(self):
+        return self.get_size()
+
+    """
+    Editable Methods
+    """
+
+    @property
+    def oov_default(self):
+        OOVDefaultDeprecationWarning()
+        return self._oov_token
 
     def allow_edit(self):
         self._editable = True
         return self
 
-    def deny_edit(self):
+    def deny_edit(self, oov_default=None):
         self._editable = False
+        self._oov_token = oov_default or self._oov_token
         return self
 
+    """
+    Save & Load Methods
+    """
+
     def get_store_path(self, store_dir):
-        return os.path.join(store_dir, 'tok.{}.dat'.format(self.name))
+        return os.path.join(store_dir, self.filename)
+
+    @property
+    def filename(self):
+        return f'tok.{self.name}.dat'
 
     def load(self, store_dir: str, as_path=False):
         store_path = store_dir if as_path else self.get_store_path(store_dir)
@@ -168,7 +164,87 @@ class Vocab:
         with open(store_path, 'w') as f:
             for i in range(len(self.i2o)):
                 f.write('{}\n'.format(self.i2o[i]))
+
         return self
 
-    def get_size(self):
-        return len(self.i2o)
+    """
+    Count Mode Methods
+    """
+
+    def set_count_mode(self, count_mode=True, oov_token=None):
+        """
+        count mode: count occurrence of each token
+        """
+        self._count_mode = count_mode
+        self._counter = {}
+        self._oov_token = oov_token or self._oov_token
+        return self
+
+    def trim(self, min_count=None, min_frequency=1):
+        """
+        trim vocab by min frequency
+        :return:
+        """
+        if min_count is None:
+            MinFrequencyDeprecationWarning()
+            min_count = min_frequency
+
+        vocabs = []
+        for index in self._counter:
+            if self._counter[index] >= min_count:
+                vocabs.append(self.i2o[index])
+
+        self.i2o = dict()
+        self.o2i = dict()
+
+        self.set_count_mode(False)
+        if self.reserved_tokens is not None:
+            self.reserve(self.reserved_tokens)
+        self.extend(vocabs)
+
+        # self.frequency_mode = True
+        return self
+
+    def summarize(self, base=10):
+        """
+        summarize vocab by frequency
+        :param base: display base, default 10
+        :return: counts of clustered bounds, e.g., { (1, 2): 100, (2, 3): 200, ... }
+        """
+        max_count = max(self._counter.values())
+        digits_max = base
+        while digits_max < max_count:
+            digits_max = digits_max * base
+
+        bounds = []
+        while digits_max >= base:
+            digits_min = digits_max // base
+            left_bound = (np.arange(base - 1)[::-1] + 1) * digits_min
+            right_bound = left_bound + digits_min
+            bounds.extend(zip(left_bound, right_bound))
+            digits_max = digits_min
+        bounds.reverse()  # [(1, 2), ..., (9, 10), (10, 20), ..., (90, 100), (100, 200), ..., ...]
+
+        counts = dict()
+        for bound in bounds:
+            counts[bound] = 0
+
+        for index in self._counter:
+            count = self._counter[index]
+            # binary search
+            left, right = 0, len(bounds) - 1
+            while left <= right:
+                mid = (left + right) // 2
+                if bounds[mid][0] <= count < bounds[mid][1]:
+                    counts[bounds[mid]] += 1
+                    break
+                elif count < bounds[mid][0]:
+                    right = mid - 1
+                else:
+                    left = mid + 1
+
+        for bound in bounds:
+            if not counts[bound]:
+                del counts[bound]
+
+        return counts

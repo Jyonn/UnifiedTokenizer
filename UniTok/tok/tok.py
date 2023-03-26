@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Callable
 
 from UniTok.vocab.vocab import Vocab
 
@@ -7,10 +7,10 @@ class BaseTok:
     """
     Meta Tokenizer
     """
+    return_list = None
 
-    def __init__(self, name: str = None, vocab: Vocab = None, pre_handler=None):
+    def __init__(self, name: str = None, vocab: Vocab = None, pre_handler: Callable = None):
         """
-
         :param name: vocab name
         :param vocab: vocab object
         :param pre_handler: pre handler for token
@@ -20,6 +20,8 @@ class BaseTok:
         self.PAD = 0  # padding index
         self.vocab = vocab or Vocab(name)  # build vocab
         self.pre_handler = pre_handler
+
+        assert self.return_list is not None, ValueError('class attribute return_list should be set')
 
     def insert(self, token):
         """
@@ -35,9 +37,7 @@ class BaseTok:
         tokenize object
         :return: token index or token index list
         """
-        if isinstance(obj, Iterable):
-            return [self.insert(o) for o in obj]
-        return self.insert(obj)
+        raise NotImplemented
 
     def _t(self, obj):
         """
