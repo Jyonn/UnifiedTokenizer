@@ -4,31 +4,44 @@ from typing import Union, List
 
 import numpy as np
 
+from UniTok.compatible.uni_warnings import VocabMapDeprecationWarning
+
+
+class VocabMap(dict):
+    def __call__(self, *args, **kwargs):
+        return self.__getitem__(*args, **kwargs)
+
 
 class Vocab:
-    __VOCAB_ID = 0
-
-    @classmethod
-    def get_vocab_id(cls):
-        vocab_id = cls.__VOCAB_ID
-        cls.__VOCAB_ID += 1
-        return vocab_id
+    """
+    Vocabulary class for mapping object to index and vice versa.
+    """
 
     def __init__(self, name: str):
         if not isinstance(name, str):
-            raise ValueError('Vocab name should be string')
+            raise ValueError('vocab name must be a string')
 
         self.name = name
-        self.obj2index, self.index2obj = {}, {}
-        self.editable = True
+        self.o2i, self.i2o = VocabMap(), VocabMap()
+
+        self._editable = True
         self.frequency_mode = False
         self.oov_default = None
-        self.vocab_id = Vocab.get_vocab_id()
         self.frequency = {}
         self.max_frequency = 0
 
         self.frequent_vocab = []
         self.reserve_tokens = None
+
+    @property
+    def obj2index(self) -> VocabMap:
+        VocabMapDeprecationWarning()
+        return self.o2i
+
+    @property
+    def index2obj(self) -> VocabMap:
+        VocabMapDeprecationWarning()
+        return self.i2o
 
     def init_frequency(self):
         self.frequency = {}
@@ -47,9 +60,9 @@ class Vocab:
         self.frequent_vocab = []
         for index in self.frequency:
             if self.frequency[index] >= min_frequency:
-                self.frequent_vocab.append(self.index2obj[index])
-        self.index2obj = dict()
-        self.obj2index = dict()
+                self.frequent_vocab.append(self.i2o[index])
+        self.i2o = dict()
+        self.o2i = dict()
 
         if self.reserve_tokens is not None:
             self.reserve(self.reserve_tokens)
@@ -95,19 +108,19 @@ class Vocab:
         return self
 
     def append(self, obj) -> int:
-        if obj not in self.obj2index:
+        if obj not in self.o2i:
             if self.frequency_mode:
                 if self.oov_default is not None:
                     return self.oov_default
                 return -1
-            if not self.editable:
+            if not self._editable:
                 if self.oov_default is not None:
                     return self.oov_default
                 raise ValueError(f'Vocab {self.name} is not editable, but new word [{obj}] appears')
-            index = len(self.index2obj)
-            self.obj2index[obj] = index
-            self.index2obj[index] = obj
-        return self.obj2index[obj]
+            index = len(self.i2o)
+            self.o2i[obj] = index
+            self.i2o[index] = obj
+        return self.o2i[obj]
 
     def reserve(self, tokens: Union[int, List[any]]):
         if self.get_size():
@@ -125,14 +138,14 @@ class Vocab:
         return self
 
     def get_tokens(self):
-        return [self.index2obj[i] for i in range(len(self.index2obj))]
+        return [self.i2o[i] for i in range(len(self.i2o))]
 
     def allow_edit(self):
-        self.editable = True
+        self._editable = True
         return self
 
     def deny_edit(self):
-        self.editable = False
+        self._editable = False
         return self
 
     def get_store_path(self, store_dir):
@@ -141,21 +154,21 @@ class Vocab:
     def load(self, store_dir: str, as_path=False):
         store_path = store_dir if as_path else self.get_store_path(store_dir)
 
-        self.obj2index, self.index2obj = {}, {}
+        self.o2i, self.i2o = {}, {}
         with open(store_path, 'r') as f:
             objs = f.read().split('\n')[:-1]
         for index, obj in enumerate(objs):
-            self.obj2index[obj] = index
-            self.index2obj[index] = obj
+            self.o2i[obj] = index
+            self.i2o[index] = obj
 
         return self
 
     def save(self, store_dir):
         store_path = self.get_store_path(store_dir)
         with open(store_path, 'w') as f:
-            for i in range(len(self.index2obj)):
-                f.write('{}\n'.format(self.index2obj[i]))
+            for i in range(len(self.i2o)):
+                f.write('{}\n'.format(self.i2o[i]))
         return self
 
     def get_size(self):
-        return len(self.index2obj)
+        return len(self.i2o)

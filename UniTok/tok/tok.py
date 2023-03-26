@@ -1,21 +1,48 @@
+from typing import Iterable
+
 from UniTok.vocab.vocab import Vocab
 
 
 class BaseTok:
+    """
+    Meta Tokenizer
+    """
+
     def __init__(self, name: str = None, vocab: Vocab = None, pre_handler=None):
-        self.PAD = 0
+        """
+
+        :param name: vocab name
+        :param vocab: vocab object
+        :param pre_handler: pre handler for token
+        """
         assert name or vocab, ValueError('name and vocab can not both be null')
 
-        if vocab:
-            self.vocab = vocab
-        else:
-            self.vocab = Vocab(name)
+        self.PAD = 0  # padding index
+        self.vocab = vocab or Vocab(name)  # build vocab
         self.pre_handler = pre_handler
 
+    def insert(self, token):
+        """
+        insert token into vocab
+        :return: token index
+        """
+        if self.pre_handler:
+            token = self.pre_handler(token)
+        return self.vocab.append(token)
+
     def t(self, obj) -> [int, list]:
-        raise NotImplementedError
+        """
+        tokenize object
+        :return: token index or token index list
+        """
+        if isinstance(obj, Iterable):
+            return [self.insert(o) for o in obj]
+        return self.insert(obj)
 
     def _t(self, obj):
+        """
+        wrapped tokenize method, filter out unknown token
+        """
         ids = self.t(obj)
         if isinstance(ids, list):
             return list(filter(lambda index: index > -1, ids))

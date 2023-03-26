@@ -8,7 +8,7 @@ class SplitTok(BaseTok):
         super(SplitTok, self).__init__(**kwargs)
         self.sep = sep
 
-    def t(self, obj,):
+    def t(self, obj):
         ids = []
         if pd.notnull(obj):
             ts = obj.split(self.sep)

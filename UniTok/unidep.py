@@ -58,7 +58,7 @@ class UniDep:
         self.vocab_depot = VocabDepot()
         for vocab_name in self.vocab_info:
             self.vocab_depot.append(Vocab(name=vocab_name).load(self.store_dir))
-        self.id2index = self.vocab_depot[self.id_vocab].obj2index
+        self.id2index = self.vocab_depot[self.id_vocab].o2i
 
         self._visible_indexes = list(range(self.sample_size))
         self.union_depots = dict()  # type: Dict[str, List[UniDep]]
