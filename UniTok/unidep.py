@@ -25,6 +25,12 @@ class UniDep:
         self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
         self.meta = Meta(**json.load(open(self.meta_path)))
 
+        if self.meta.upgrade:
+            # backup old meta
+            os.rename(self.meta_path, self.meta_path + '.bak')
+            # save new meta
+            self.meta.save(self.store_dir)
+
         self.data_path = os.path.join(self.store_dir, 'data.npy')
         self.data = np.load(self.data_path, allow_pickle=True)
         try:

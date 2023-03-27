@@ -36,11 +36,14 @@ class Vocabs(dict):
             raise ValueError(f'vocab {vocab.name} already exists')
         self[vocab.name] = vocab
 
-    def get_info(self):
+    def get_info(self) -> dict:
+        """
+        Get the information of all vocabs
+        """
         return {vocab.name: dict(
             size=vocab.get_size(),
             cols=self.cols[vocab.name],
-        ) for vocab in self}
+        ) for vocab in self.values()}
 
     def __call__(self, name) -> Vocab:
         return self[name]

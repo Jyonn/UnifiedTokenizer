@@ -149,7 +149,7 @@ class UniTok:
             cols=self.cols.get_info(),
             id_col=self.id_col.name,
         )
-        json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'))
+        json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
         return self
 
 
