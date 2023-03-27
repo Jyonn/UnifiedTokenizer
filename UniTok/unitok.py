@@ -18,6 +18,43 @@ from .vocabs import Vocabs
 class UniTok:
     """
     Unified Tokenizer, which can be used to tokenize different types of data in a DataFrame.
+
+    Example:
+        >>> import pandas as pd
+        >>> from UniTok import UniTok, Column, Vocab
+        >>>
+        >>> # load data
+        >>> df = pd.read_csv(
+        ... filepath_or_buffer='news-sample.tsv',
+        ... sep='\t',
+        ... names=['nid', 'cat', 'subCat', 'title', 'abs', 'url', 'titEnt', 'absEnt'],
+        ... usecols=['nid', 'cat', 'subCat', 'title', 'abs'],
+        ... )
+        >>>
+        >>> # define tokenizers
+        >>> id_tok = IdTok(name='nid')
+        >>> cat_tok = EntTok(name='cat')
+        >>> text_tok = BertTok(name='eng', vocab_dir='bert-base-uncased')
+        >>>
+        >>> # define UniTok
+        >>> tok = UniTok().add_index_col(name='nid').add_col(Column(
+        ...     name='cat',
+        ...     tok=cat_tok,
+        ... )).add_col(Column(
+        ...     name='subCat',
+        ...     tok=cat_tok,
+        ... ))add_col(Column(
+        ...     name='title',
+        ...     tok=text_tok,
+        ...     max_length=20,
+        ... )).add_col(Column(
+        ...     name='abs',
+        ...     tok=text_tok,
+        ...     max_length=30,
+        ... ))
+        >>>
+        >>> # tokenize
+        >>> tok.read_file(df).tokenize().store_data('news-sample')
     """
     VER = 'v3.0'
 
@@ -151,36 +188,3 @@ class UniTok:
         )
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
         return self
-
-
-if __name__ == '__main__':
-    df = pd.read_csv(
-        filepath_or_buffer='news-sample.tsv',
-        sep='\t',
-        names=['nid', 'cat', 'subCat', 'title', 'abs', 'url', 'titEnt', 'absEnt'],
-        usecols=['nid', 'cat', 'subCat', 'title', 'abs'],
-    )
-
-    ut = UniTok()
-    id_tok = IdTok(name='news')
-    cat_tok = EntTok(name='cat')
-    txt_tok = BertTok(name='english', vocab_dir='bert-base-uncased')
-    cat_tok.vocab.reserve(100)
-
-    ut.add_col(Column(
-        name='nid',
-        tok=id_tok,
-    )).add_col(Column(
-        name='cat',
-        tok=cat_tok,
-    )).add_col(Column(
-        name='subCat',
-        tok=cat_tok,
-    )).add_col(Column(
-        name='title',
-        tok=txt_tok,
-    )).add_col(Column(
-        name='abs',
-        tok=txt_tok,
-    )).read_file(df).tokenize()
-    ut.store_data('news-sample')

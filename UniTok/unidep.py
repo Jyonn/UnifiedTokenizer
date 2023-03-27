@@ -17,19 +17,12 @@ class UniDep:
 
     def __init__(self, store_dir, silent=False):
         self.store_dir = os.path.expanduser(store_dir)
+        self.meta = Meta(self.store_dir)
+
         self.silent = silent
 
         self.cached = False
         self.cached_samples = []
-
-        self.meta_path = os.path.join(self.store_dir, 'meta.data.json')
-        self.meta = Meta(**json.load(open(self.meta_path)))
-
-        if self.meta.upgrade:
-            # backup old meta
-            os.rename(self.meta_path, self.meta_path + '.bak')
-            # save new meta
-            self.meta.save(self.store_dir)
 
         self.data_path = os.path.join(self.store_dir, 'data.npy')
         self.data = np.load(self.data_path, allow_pickle=True)
@@ -176,6 +169,26 @@ class UniDep:
         self.sample_size = len(self._indexes)
         return self
 
+    def export(self, store_dir):
+        """
+        export unioned or filtered depot
+        """
+
+        data = dict()
+
+        for sample in tqdm.tqdm(self, disable=self.silent):
+            for col_name in sample:
+                if col_name not in data:
+                    data[col_name] = []
+                data[col_name].append(sample[col_name])
+
+        for col_name in data:
+            data[col_name] = np.array(data[col_name])
+        np.save(os.path.join(store_dir, 'data.npy'), data, allow_pickle=True)
+
+        meta_data = self.meta.get_info()
+        json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
+
     """
     Deprecated properties and methods
     """
@@ -200,7 +213,7 @@ class UniDep:
 
     def get_vocab_size(self, col_name, as_vocab=False):
         warnings.warn('unidep.get_vocab_size is deprecated (will be removed in 4.x version)', DeprecationWarning)
-        vocab_id = col_name if as_vocab else self.get_vocab(col_name)
+        vocab_id = col_name if as_vocab else self.cols[col_name].voc.name
         return self.vocs[vocab_id].size
 
     def get_vocab(self, col_name):

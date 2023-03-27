@@ -17,7 +17,6 @@ class Col:
 
     def get_info(self):
         info = {
-            'name': self.name,
             'voc': self.voc.name,
         }
         if self.list:
@@ -37,7 +36,6 @@ class Voc:
 
     def get_info(self):
         return {
-            'name': self.name,
             'size': self.size,
             'cols': [col.name for col in self.cols]
         }
@@ -46,12 +44,15 @@ class Voc:
 class Meta:
     VER = 'UniDep-2.0'
 
-    def __init__(self, version, id_col, col_info=None, vocab_info=None, cols=None, vocs=None):
-        self.version = version
+    def __init__(self, store_dir):
+        self.store_dir = store_dir
+        self.path = os.path.join(self.store_dir, 'meta.data.json')
 
-        self.cols = cols or col_info
-        self.vocs = vocs or vocab_info
-        self.id_col = id_col
+        data = self.load()
+        self.version = data['version']
+        self.cols = data.get('cols') or data['col_info']
+        self.vocs = data.get('vocs') or data['vocab_info']
+        self.id_col = data['id_col']
 
         # build col-voc graph
         self.cols = {col: Col(**self.cols[col], name=col) for col in self.cols}
@@ -63,13 +64,13 @@ class Meta:
         for voc in self.vocs.values():
             voc.cols = [self.cols[col] for col in voc.cols]
 
-        self.upgrade = self.version_check()
+        self.version_check()
 
     @staticmethod
     def parse_version(version):
         if version.startswith('UniDep-'):
             return version[7:]
-        return version
+        return f'0.{version}'
 
     def get_info(self):
         return {
@@ -79,8 +80,11 @@ class Meta:
             'vocs': {voc.name: voc.get_info() for voc in self.vocs.values()}
         }
 
-    def save(self, store_dir):
-        json.dump(self.get_info(), open(os.path.join(store_dir, 'meta.json'), 'w'), indent=2)
+    def load(self) -> dict:
+        return json.load(open(self.path))
+
+    def save(self):
+        json.dump(self.get_info(), open(os.path.join(self.store_dir, 'meta.data.json'), 'w'), indent=2)
 
     def version_check(self):
         current_version = self.parse_version(Meta.VER)
@@ -88,16 +92,17 @@ class Meta:
 
         if current_version != depot_version:
             warnings.warn(
-                'Meta version mismatch, '
-                'current version: {}, '
-                'depot version: {}. '
-                'It may cause unexpected error.'.format(
-                    current_version, depot_version
-                ))
+                f'meta version of depot ({self.store_dir}) mismatch, '
+                f'current version: {current_version}, '
+                f'depot version: {depot_version}. '
+                f'It may cause unexpected error.')
 
         if current_version <= depot_version:
             return
 
         command = input('Press Y to upgrade meta data for future use (Y/n): ')
-        if command.lower() != 'y':
-            return True
+        if command.lower() == 'y':
+            os.rename(self.path, self.path + '.bak')
+            print('Old meta data backed up to {}.'.format(self.path + '.bak'))
+            self.save()
+            print('Meta data upgraded.')
