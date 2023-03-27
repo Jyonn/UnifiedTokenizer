@@ -1,4 +1,4 @@
-from UniTok.tok import BaseTok
+from .tok import BaseTok
 
 
 class SeqTok(BaseTok):

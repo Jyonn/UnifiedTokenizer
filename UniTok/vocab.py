@@ -1,11 +1,9 @@
 import math
 import os
+import warnings
 from typing import Union, List
 
 import numpy as np
-
-from UniTok.compatible.uni_warnings import VocabMapDeprecationWarning, OOVDefaultDeprecationWarning, \
-    MinFrequencyDeprecationWarning
 
 
 class VocabMap(dict):
@@ -29,15 +27,10 @@ class Vocab:
 
         self._editable = True  # whether vocab is editable
         self._oov_token = None  # out of vocabulary token
+        self._stable_mode = False
 
         self._count_mode = False  # whether count mode is on
         self._counter = {}  # counter for counting occurrence of each token
-
-        # self.frequency_mode = False
-        # self.frequency = {}
-        # self.max_frequency = 0
-
-        # self.frequent_vocab = []
 
     """
     Basic Methods
@@ -48,7 +41,8 @@ class Vocab:
         """
         Deprecated, use o2i instead
         """
-        VocabMapDeprecationWarning()
+        warnings.warn('vocab.index2obj and vocab.obj2index are deprecated, '
+                      'use vocab.i2o and vocab.o2i instead (will be removed in 4.x version)', DeprecationWarning)
         return self.o2i
 
     @property
@@ -56,7 +50,8 @@ class Vocab:
         """
         Deprecated, use i2o instead
         """
-        VocabMapDeprecationWarning()
+        warnings.warn('vocab.index2obj and vocab.obj2index are deprecated, '
+                      'use vocab.i2o and vocab.o2i instead (will be removed in 4.x version)', DeprecationWarning)
         return self.i2o
 
     def extend(self, objs):
@@ -80,8 +75,10 @@ class Vocab:
         if obj in self.o2i:
             return self.o2i[obj]
 
-        if self._count_mode:
-            return self._oov_token or -1
+        if self._stable_mode:
+            if self._oov_token is not None:
+                return self._oov_token
+            return -1
 
         if not self._editable:
             if self._oov_token is not None:
@@ -118,13 +115,17 @@ class Vocab:
     def __len__(self):
         return self.get_size()
 
+    def __bool__(self):
+        return True
+
     """
     Editable Methods
     """
 
     @property
     def oov_default(self):
-        OOVDefaultDeprecationWarning()
+        warnings.warn('vocab.oov_default is deprecated, '
+                      'use vocab.oov_token instead (will be removed in 4.x version)', DeprecationWarning)
         return self._oov_token
 
     def allow_edit(self):
@@ -186,7 +187,8 @@ class Vocab:
         :return:
         """
         if min_count is None:
-            MinFrequencyDeprecationWarning()
+            warnings.warn('vocab.min_frequency is deprecated, '
+                          'use vocab.min_count instead (will be removed in 4.x version)', DeprecationWarning)
             min_count = min_frequency
 
         vocabs = []
@@ -202,7 +204,7 @@ class Vocab:
             self.reserve(self.reserved_tokens)
         self.extend(vocabs)
 
-        # self.frequency_mode = True
+        self._stable_mode = True
         return self
 
     def summarize(self, base=10):
@@ -248,3 +250,19 @@ class Vocab:
                 del counts[bound]
 
         return counts
+
+    """
+    Deprecated Attributes
+    """
+
+    def __getattr__(self, item):
+        if item in ['frequency_mode', 'frequency', 'max_frequency', 'frequent_vocab']:
+            raise AttributeError(f'{item} is deprecated after UniTok 3.0, '
+                                 f'degrade to 2.4.3.2 or lower to use it, '
+                                 f'or check new features of Vocab class')
+
+    @property
+    def trim_vocab(self):
+        warnings.warn('vocab.trim_vocab is deprecated, '
+                      'use vocab.trim instead (will be removed in 4.x version)', DeprecationWarning)
+        return self.trim

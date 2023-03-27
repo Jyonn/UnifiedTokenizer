@@ -1,135 +1,152 @@
 import json
 import os
-from typing import Dict, Optional
+import warnings
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 
+from .cols import Cols
 from .column import Column, IndexColumn
 from .tok.bert_tok import BertTok
 from .tok.entity_tok import EntTok
 from .tok.id_tok import IdTok
-from .tok.tokenizer import ListTokenizer
-from UniTok.vocab.depot import VocabDepot
+from .vocab import Vocab
+from .vocabs import Vocabs
 
 
 class UniTok:
-    VER = 'v2.4'
+    """
+    Unified Tokenizer, which can be used to tokenize different types of data in a DataFrame.
+    """
+    VER = 'v3.0'
 
     def __init__(self):
-        self.cols = dict()  # type: Dict[str, Column]
-        self.vocab_depot = VocabDepot()
+        self.cols = Cols()
+        self.vocabs = Vocabs()
         self.id_col = None  # type: Optional[Column]
         self.data = None
 
-    def add_col(self, col: Column):
-        self.cols[col.name] = col
-        self.vocab_depot.append(col)
+    @property
+    def vocab_depots(self):
+        warnings.warn('vocab_depot is deprecated, '
+                      'use vocabs instead (will be removed in 4.x version)', DeprecationWarning)
+        return self.vocabs
 
+    def add_col(self, col: Column):
+        """
+        Declare a column in the DataFrame to be tokenized.
+        """
         if isinstance(col.tok, IdTok):
             if self.id_col:
-                print(self.id_col.name, col.name)
-                raise ValueError('Only one id column (with IdTok) is required!')
+                raise ValueError(f'already exists id column {self.id_col.name} before adding {col.name}')
             self.id_col = col
+
+        self.cols[col.name] = col
+        self.vocabs.append(col)
 
         return self
 
     def add_index_col(self, name='index'):
+        """
+        Declare a column in the DataFrame to be tokenized as index column.
+        """
+        if self.id_col:
+            raise ValueError(f'already exists id column {self.id_col.name} before adding IndexColumn')
+
         col = IndexColumn(name=name)
         self.cols[col.name] = col
-        self.vocab_depot.append(col)
-
-        if self.id_col:
-            raise ValueError('Already has id column before adding IndexColumn!')
+        self.vocabs.append(col)
         self.id_col = col
         return self
 
     def read_file(self, df, sep=None):
+        """
+        Read data from a file
+        """
         if isinstance(df, str):
             use_cols = list(self.cols.keys())
             df = pd.read_csv(df, sep=sep, usecols=use_cols)
         self.data = df
         return self
 
-    def get_col_data(self, col: Column):
+    def __getitem__(self, col):
+        """
+        Get the data of a column
+        """
         if isinstance(col, IndexColumn):
             return self.data.index
-        return self.data[col.name]
+        if isinstance(col, Column):
+            col = col.name
+        return self.data[col]
 
     def analyse(self):
-        for vocab in self.vocab_depot.depot.values():
+        """
+        Analyse the data, including:
+            1. length distribution of list-element columns
+            2. frequency distribution of vocabularies
+        """
+        for vocab in self.vocabs.values():
             vocab.set_count_mode(True)
 
         print('[ COLUMNS ]')
         for col_name in self.cols:
             col = self.cols[col_name]  # type: Column
             print('[ COL:', col.name, ']')
-            col.analyse(self.get_col_data(col))
+            col.analyse(self[col])
             print()
 
         print('[ VOCABS ]')
-        for vocab_name in self.vocab_depot.col_map:  # type: str
-            vocab = self.vocab_depot[vocab_name]
-            print('[ VOC:', vocab.name, 'with ', vocab.get_size(), 'tokens ]')
-            print('[ COL:', ', '.join(self.vocab_depot.col_map[vocab_name]), ']')
-            frequency_dict = vocab.summarize()
-            print('[ FRQ:', frequency_dict, ']')
+        for vocab in self.vocabs.values():
+            print('[ VOC:', vocab.name, 'with ', len(vocab), 'tokens ]')
+            print('[ COL:', ', '.join(self.vocabs.cols[vocab.name]), ']')
+            print('[ FRQ:', vocab.summarize(), ']')
             print()
         return self
 
     def tokenize(self):
+        """
+        Tokenize the data
+        """
         if not self.id_col:
-            raise ValueError('Id column (with IdTok) is required')
+            raise ValueError('id column is not set')
+
+        for vocab in self.vocabs.values():
+            vocab.set_count_mode(False)
 
         for col_name in self.cols:
             print('[ COL:', col_name, ']')
             col = self.cols[col_name]  # type: Column
             col.data = []
-            col.tokenize(self.get_col_data(col))
+            col.tokenize(self[col])
         return self
 
     def get_tok_path(self, col_name, store_dir):
+        """
+        Get the store path of the tokenizer of a column
+        """
+        warnings.warn('unitok.get_tok_path is deprecated (will be removed in 4.x version)', DeprecationWarning)
         return self.cols[col_name].tok.vocab.get_store_path(store_dir)
 
     def store_data(self, store_dir):
+        """
+        Store the tokenized data
+        """
         os.makedirs(store_dir, exist_ok=True)
 
-        vocab_info = dict()
-        for vocab in self.vocab_depot.depot.values():
+        for vocab in self.vocabs.values():  # type: Vocab
             vocab.save(store_dir)
-            vocab_info[vocab.name] = dict(
-                size=vocab.get_size(),
-                cols=self.vocab_depot.col_map[vocab.name],
-            )
 
         data = dict()
-        for col_name in self.cols:
-            col = self.cols[col_name]
-            data[col_name] = np.array(col.data, dtype=object)
+        for col in self.cols.values():  # type: Column
+            data[col.name] = np.array(col.data, dtype=object)
         np.save(os.path.join(store_dir, 'data.npy'), data, allow_pickle=True)
-
-        col_info = dict()
-        for col_name in self.cols:
-            col = self.cols[col_name]
-            col_info[col_name] = dict(
-                vocab=col.tok.vocab.name,
-            )
-            if isinstance(col.tokenizer, ListTokenizer):
-                max_length = col.tokenizer.max_length
-                if max_length < 1:
-                    for ids in col.data:
-                        if len(ids) > max_length:
-                            max_length = len(ids)
-                col_info[col_name].update(dict(
-                    max_length=max_length,
-                    padding=col.tokenizer.padding,
-                ))
 
         from UniTok import UniDep
         meta_data = dict(
             version=UniDep.VER,
-            vocab_info=vocab_info,
-            col_info=col_info,
+            vocs=self.vocabs.get_info(),
+            cols=self.cols.get_info(),
             id_col=self.id_col.name,
         )
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'))
@@ -138,7 +155,7 @@ class UniTok:
 
 if __name__ == '__main__':
     df = pd.read_csv(
-        filepath_or_buffer='~/Data/MIND/MINDlarge/train/news.tsv',
+        filepath_or_buffer='news-sample.tsv',
         sep='\t',
         names=['nid', 'cat', 'subCat', 'title', 'abs', 'url', 'titEnt', 'absEnt'],
         usecols=['nid', 'cat', 'subCat', 'title', 'abs'],
@@ -152,18 +169,18 @@ if __name__ == '__main__':
 
     ut.add_col(Column(
         name='nid',
-        tokenizer=id_tok.as_sing(),
+        tok=id_tok,
     )).add_col(Column(
         name='cat',
-        tokenizer=cat_tok.as_sing()
+        tok=cat_tok,
     )).add_col(Column(
         name='subCat',
-        tokenizer=cat_tok.as_sing(),
+        tok=cat_tok,
     )).add_col(Column(
         name='title',
-        tokenizer=txt_tok.as_list(),
+        tok=txt_tok,
     )).add_col(Column(
         name='abs',
-        tokenizer=txt_tok.as_list(),
+        tok=txt_tok,
     )).read_file(df).tokenize()
-    ut.store_data('MINDlarge_train')
+    ut.store_data('news-sample')

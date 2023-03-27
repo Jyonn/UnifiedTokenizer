@@ -1,5 +1,7 @@
 # Unified Tokenizer
 
+> Instructions for **3.0** version will be updated soon!
+
 ## Introduction
 
 Unified Tokenizer, shortly **UniTok**, 
@@ -56,6 +58,8 @@ from UniTok.tok import IdTok, EntTok, BertTok
 ### Read data
 
 ```python
+import pandas as pd
+
 df = pd.read_csv(
     filepath_or_buffer='path/news-sample.tsv',
     sep='\t',
@@ -67,9 +71,6 @@ df = pd.read_csv(
 ### Construct UniTok
 
 ```python
-from UniTok import UniTok, Column
-from UniTok.tok import EntTok, BertTok
-
 cat_tok = EntTok(name='cat')  # one tokenizer for both cat and subCat
 text_tok = BertTok(name='english', vocab_dir='bert-base-uncased')  # specify the bert vocab
 
@@ -77,16 +78,16 @@ unitok = UniTok().add_index_col(
     name='nid'
 ).add_col(Column(
     name='cat',
-    tokenizer=cat_tok.as_sing()
+    tok=cat_tok
 )).add_col(Column(
     name='subCat',
-    tokenizer=cat_tok.as_sing(),
+    tok=cat_tok,
 )).add_col(Column(
     name='title',
-    tokenizer=text_tok.as_list(),
+    tok=text_tok,
 )).add_col(Column(
     name='abs',
-    tokenizer=text_tok.as_list(),
+    tok=text_tok,
 )).read_file(df)
 ```
 
@@ -168,16 +169,18 @@ unitok = UniTok().add_index_col(
     name='nid'
 ).add_col(Column(
     name='cat',
-    tokenizer=cat_tok.as_sing()
+    tok=cat_tok.as_sing()
 )).add_col(Column(
     name='subCat',
-    tokenizer=cat_tok.as_sing(),
+    tok=cat_tok.as_sing(),
 )).add_col(Column(
     name='title',
-    tokenizer=text_tok.as_list(max_length=10),
+    tok=text_tok,
+    operator=SeqOperator(max_length=20),
 )).add_col(Column(
     name='abs',
-    tokenizer=text_tok.as_list(max_length=30),
+    tok=text_tok,
+    operator=SeqOperator(max_length=30),
 )).read_file(df)
 ```
 

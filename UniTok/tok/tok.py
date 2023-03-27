@@ -1,12 +1,13 @@
-from typing import Iterable, Callable
+from typing import Callable
 
-from UniTok.vocab.vocab import Vocab
+from UniTok.vocab import Vocab
 
 
 class BaseTok:
     """
     Meta Tokenizer
     """
+    Alternative = 'alternative'
     return_list = None
 
     def __init__(self, name: str = None, vocab: Vocab = None, pre_handler: Callable = None):
@@ -17,7 +18,6 @@ class BaseTok:
         """
         assert name or vocab, ValueError('name and vocab can not both be null')
 
-        self.PAD = 0  # padding index
         self.vocab = vocab or Vocab(name)  # build vocab
         self.pre_handler = pre_handler
 
@@ -52,14 +52,6 @@ class BaseTok:
 
     def __call__(self, obj):
         return self._t(obj)
-
-    def as_sing(self):
-        from .tokenizer import SingT
-        return SingT(self)
-
-    def as_list(self, max_length=0, padding=False, slice_post=False, pad_pre=False):
-        from .tokenizer import ListT
-        return ListT(self, max_length=max_length, padding=padding, slice_post=slice_post, pad_pre=pad_pre)
 
     def load_vocab(self, store_dir: str, as_path=False):
         self.vocab.load(store_dir=store_dir, as_path=as_path)

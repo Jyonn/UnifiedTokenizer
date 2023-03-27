@@ -1,7 +1,7 @@
 from .plot import Plot
 
 
-class LengthAnalysis:
+class Lengths:
     def __init__(self):
         self.lengths = []
         self.max_length = -1
@@ -11,7 +11,7 @@ class LengthAnalysis:
         if length > self.max_length:
             self.max_length = length
 
-    def analyse(self):
+    def summarize(self):
         max_length = max(self.lengths)
         min_length = min(self.lengths)
         avg_length = '%.4f' % (sum(self.lengths) * 1.0 / len(self.lengths))
@@ -28,8 +28,8 @@ class LengthAnalysis:
 if __name__ == '__main__':
     import random
 
-    analysis = LengthAnalysis()
+    analysis = Lengths()
     analysis.clean()
     for _ in range(67923):
         analysis.push(random.randint(0, 99999) % 100)
-    analysis.analyse()
+    analysis.summarize()

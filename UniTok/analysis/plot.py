@@ -5,11 +5,15 @@ import termplot
 
 
 class Plot:
-    def __init__(self,
-                 array: list,
-                 groups: int = 50,
-                 height: int = 10,
-                 ):
+    """
+    Plot length distribution in a list-element column in DataFrame.
+    """
+    def __init__(
+            self,
+            array: list,
+            groups: int = 50,
+            height: int = 10,
+    ):
         self.array = array
         self.min = min(self.array)
         self.max = max(self.array)

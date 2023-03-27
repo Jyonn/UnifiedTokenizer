@@ -1,4 +1,6 @@
-from UniTok.tok import BaseTok
+from typing import Iterable
+
+from .tok import BaseTok
 
 
 class NumberTok(BaseTok):
@@ -18,6 +20,8 @@ class NumberTok(BaseTok):
         >>> tok(60)  # 60
         >>> tok(200)  # ValueError: vocab_size is 100, but 200 is given
     """
+    return_list = BaseTok.Alternative
+
     def __init__(self, vocab_size=None, **kwargs):
         super(NumberTok, self).__init__(**kwargs)
 
@@ -26,9 +30,15 @@ class NumberTok(BaseTok):
             self.vocab.extend([str(i) for i in range(vocab_size)])
 
     def t(self, obj):
-        obj = int(obj)
-        if obj >= len(self.vocab):
-            if self.vocab_size is not None:
-                raise ValueError('vocab_size is {}, but {} is given'.format(self.vocab_size, obj))
-            self.vocab.extend([str(i) for i in range(len(self.vocab), obj + 1)])
+        # check is iterable
+        if isinstance(obj, Iterable) and not isinstance(obj, str):
+            obj = [int(o) for o in obj]
+        else:
+            obj = int(obj)
+        objs = [obj] if isinstance(obj, int) else obj
+        for o in objs:
+            if o >= len(self.vocab):
+                if self.vocab_size is not None:
+                    raise ValueError('vocab_size is {}, but {} is given'.format(self.vocab_size, o))
+                self.vocab.extend([str(i) for i in range(len(self.vocab), o + 1)])
         return obj
