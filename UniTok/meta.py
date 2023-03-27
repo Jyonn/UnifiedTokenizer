@@ -40,6 +40,13 @@ class Voc:
             'cols': [col.name for col in self.cols]
         }
 
+    def merge(self, other):
+        return Voc(
+            name=self.name,
+            size=self.size,
+            cols=list(set(self.cols + other.cols)),
+        )
+
 
 class Meta:
     VER = 'UniDep-2.0'

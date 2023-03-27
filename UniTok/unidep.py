@@ -121,18 +121,21 @@ class UniDep:
 
     @classmethod
     def _merge_cols(cls, c1: Dict[str, Col], c2: Dict[str, Col]) -> Dict[str, Col]:
-        for col_name, col in c2.items():
-            if col_name in c1 and c1[col_name] != col:
-                raise ValueError(f'col {col_name} config conflict')
+        for name, col in c2.items():
+            if name in c1 and c1[name] != col:
+                raise ValueError(f'col {name} config conflict')
         return cls._merge(c1, c2)
 
     @classmethod
     def _merge_vocs(cls, v1: Dict[str, Voc], v2: Dict[str, Voc]) -> Dict[str, Voc]:
-        for vocab_name in v2:
-            vocab_data = v2[vocab_name]
-            if vocab_name in v1 and v1[vocab_name] != vocab_data:
-                raise ValueError(f'vocab {vocab_name} config conflict')
-        return cls._merge(v1, v2)
+        merged = v1.copy()
+        for name, vocab in v2.items():
+            if name in v1:
+                if v1[name] != vocab:
+                    raise ValueError(f'vocab {name} config conflict')
+                vocab = v1[name].merge(vocab)
+            merged[name] = vocab
+        return merged
 
     def union(self, *depots: 'UniDep'):
         """
@@ -174,6 +177,7 @@ class UniDep:
         export unioned or filtered depot
         """
 
+        os.makedirs(store_dir, exist_ok=True)
         data = dict()
 
         for sample in tqdm.tqdm(self, disable=self.silent):
