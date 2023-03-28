@@ -26,10 +26,11 @@ class Col:
 
 
 class Voc:
-    def __init__(self, name, size, cols):
+    def __init__(self, name, size, cols, store_dir):
         self.name: str = name
         self.size: int = size
         self.cols: List[Col] = cols
+        self.store_dir = store_dir
 
     def __eq__(self, other):
         return self.name == other.name and self.size == other.size
@@ -40,11 +41,24 @@ class Voc:
             'cols': [col.name for col in self.cols]
         }
 
+    def export(self, store_dir):
+        from .vocab import Vocab
+        vocab = Vocab(name=self.name).load(self.store_dir)
+        vocab.save(store_dir)
+
     def merge(self, other):
+        cols = self.cols.copy()
+        for col in other.cols:
+            for _col in cols:
+                if col.name == _col.name:
+                    break
+            else:
+                cols.append(col)
         return Voc(
             name=self.name,
             size=self.size,
-            cols=list(set(self.cols + other.cols)),
+            cols=cols,
+            store_dir=self.store_dir
         )
 
 
@@ -63,7 +77,7 @@ class Meta:
 
         # build col-voc graph
         self.cols = {col: Col(**self.cols[col], name=col) for col in self.cols}
-        self.vocs = {voc: Voc(**self.vocs[voc], name=voc) for voc in self.vocs}
+        self.vocs = {voc: Voc(**self.vocs[voc], name=voc, store_dir=self.store_dir) for voc in self.vocs}
 
         # connect class objects
         for col in self.cols.values():

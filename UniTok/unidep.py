@@ -180,6 +180,9 @@ class UniDep:
         os.makedirs(store_dir, exist_ok=True)
         data = dict()
 
+        for voc in self.meta.vocs.values():
+            voc.export(store_dir)
+
         for sample in tqdm.tqdm(self, disable=self.silent):
             for col_name in sample:
                 if col_name not in data:
