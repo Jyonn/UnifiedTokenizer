@@ -9,7 +9,7 @@ class EntTok(BaseTok):
         ...: other arguments of the BaseTok
 
     Example:
-        >>> from UniTok.tok.entity_tok import EntTok
+        >>> from UniTok.tok.ent_tok import EntTok
         >>> tok = EntTok(name='entity')
         >>> tok('JJ Lin')  # 0
         >>> tok('Jay Chou')  # 1

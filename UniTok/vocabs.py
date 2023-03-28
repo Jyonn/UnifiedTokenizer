@@ -41,7 +41,7 @@ class Vocabs(dict):
         Get the information of all vocabs
         """
         return {vocab.name: dict(
-            size=vocab.get_size(),
+            size=len(vocab),
             cols=self.cols[vocab.name],
         ) for vocab in self.values()}
 

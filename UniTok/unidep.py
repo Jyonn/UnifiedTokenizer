@@ -104,7 +104,28 @@ class UniDep:
         return self.sample_size
 
     def __str__(self):
-        return f'UniDep from {self.store_dir}'
+        """        UniDep (dir):
+
+        Sample Size: 1000
+        Id Column: id
+        Columns:
+            id, vocab index (size 1000)
+            text, vocab eng (size 30522), max length 100
+            label, vocab label (size 2)
+        """
+        introduction = f"""
+        UniDep ({self.meta.parse_version(self.meta.version)}): {self.store_dir}
+        
+        Sample Size: {self.sample_size}
+        Id Column: {self.id_col}
+        Columns:\n"""
+
+        for col_name, col in self.cols.items():  # type: str, Col
+            introduction += f'        \t{col_name}, vocab {col.voc.name} (size {col.voc.size})'
+            if col.max_length:
+                introduction += f', max length {col.max_length}'
+            introduction += '\n'
+        return introduction
 
     def __repr__(self):
         return str(self)

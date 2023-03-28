@@ -127,3 +127,15 @@ class Meta:
             print('Old meta data backed up to {}.'.format(self.path + '.bak'))
             self.save()
             print('Meta data upgraded.')
+
+    @property
+    def col_info(self):
+        warnings.warn('col_info is deprecated, use cols instead.'
+                      '(meta.col_info -> meta.cols)', DeprecationWarning)
+        return self.cols
+
+    @property
+    def vocab_info(self):
+        warnings.warn('vocab_info is deprecated, use vocs instead.'
+                      '(meta.vocab_info -> meta.vocs)', DeprecationWarning)
+        return self.vocs

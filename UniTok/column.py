@@ -42,9 +42,9 @@ class Column:
         tok (BaseTok): The tokenizer of the column.
         operator (SeqOperator): The operator of the column.
     """
-    def __init__(self, name, tok: BaseTok, operator: SeqOperator = None, **kwargs):
-        self.name = name
+    def __init__(self, tok: BaseTok, name=None, operator: SeqOperator = None, **kwargs):
         self.tok = tok
+        self.name = name or tok.vocab.name
         self.operator = operator
 
         if kwargs:

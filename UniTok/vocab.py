@@ -94,7 +94,7 @@ class Vocab:
         """
         set first n tokens as reserved tokens
         """
-        if self.get_size():
+        if len(self):
             raise ValueError(f'vocab {self.name} is not empty, can not reserve tokens')
 
         self.reserved_tokens = tokens
@@ -107,16 +107,24 @@ class Vocab:
         return self
 
     def get_tokens(self):
-        return [self.i2o[i] for i in range(len(self))]
+        warnings.warn('vocab.get_tokens is deprecated, '
+                      'use list(vocab) instead (will be removed in 4.x version)', DeprecationWarning)
+        return list(self)
 
     def get_size(self):
-        return len(self.i2o)
+        warnings.warn('vocab.get_size is deprecated, '
+                      'use len(vocab) instead (will be removed in 4.x version)', DeprecationWarning)
+        return len(self)
 
     def __len__(self):
-        return self.get_size()
+        return len(self.i2o)
 
     def __bool__(self):
         return True
+
+    def __iter__(self):
+        for i in range(len(self)):
+            yield self.i2o[i]
 
     """
     Editable Methods
@@ -163,8 +171,8 @@ class Vocab:
     def save(self, store_dir):
         store_path = self.get_store_path(store_dir)
         with open(store_path, 'w') as f:
-            for i in range(len(self.i2o)):
-                f.write('{}\n'.format(self.i2o[i]))
+            for token in self:
+                f.write('{}\n'.format(token))
 
         return self
 

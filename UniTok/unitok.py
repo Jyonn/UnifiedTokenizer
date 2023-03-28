@@ -9,7 +9,7 @@ import pandas as pd
 from .cols import Cols
 from .column import Column, IndexColumn
 from .tok.bert_tok import BertTok
-from .tok.entity_tok import EntTok
+from .tok.ent_tok import EntTok
 from .tok.id_tok import IdTok
 from .vocab import Vocab
 from .vocabs import Vocabs
@@ -97,7 +97,7 @@ class UniTok:
         self.id_col = col
         return self
 
-    def read_file(self, df, sep=None):
+    def read(self, df, sep=None):
         """
         Read data from a file
         """
@@ -106,6 +106,11 @@ class UniTok:
             df = pd.read_csv(df, sep=sep, usecols=use_cols)
         self.data = df
         return self
+
+    def read_file(self, df, sep=None):
+        warnings.warn('read_file is deprecated, use read instead '
+                      '(will be removed in 4.x version)', DeprecationWarning)
+        return self.read(df, sep)
 
     def __getitem__(self, col):
         """
@@ -166,6 +171,14 @@ class UniTok:
         return self.cols[col_name].tok.vocab.get_store_path(store_dir)
 
     def store_data(self, store_dir):
+        """
+        Store the tokenized data
+        """
+        warnings.warn('unitok.store_data is deprecated, use store instead '
+                      '(will be removed in 4.x version)', DeprecationWarning)
+        self.store(store_dir)
+
+    def store(self, store_dir):
         """
         Store the tokenized data
         """
