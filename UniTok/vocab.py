@@ -123,8 +123,14 @@ class Vocab:
         return True
 
     def __iter__(self):
+        """vocab obj list iterator"""
         for i in range(len(self)):
             yield self.i2o[i]
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.i2o[item]
+        return self.o2i[item]
 
     """
     Editable Methods
@@ -192,8 +198,10 @@ class Vocab:
     def trim(self, min_count=None, min_frequency=1):
         """
         trim vocab by min frequency
-        :return:
+        :return: trimmed tokens
         """
+        _trimmed = []
+
         if min_count is None:
             warnings.warn('vocab.min_frequency is deprecated, '
                           'use vocab.min_count instead (will be removed in 4.x version)', DeprecationWarning)
@@ -203,6 +211,8 @@ class Vocab:
         for index in self._counter:
             if self._counter[index] >= min_count:
                 vocabs.append(self.i2o[index])
+            else:
+                _trimmed.append(self.i2o[index])
 
         self.i2o = dict()
         self.o2i = dict()
@@ -213,7 +223,7 @@ class Vocab:
         self.extend(vocabs)
 
         self._stable_mode = True
-        return self
+        return _trimmed
 
     def summarize(self, base=10):
         """

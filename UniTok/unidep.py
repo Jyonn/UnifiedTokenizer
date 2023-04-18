@@ -100,6 +100,11 @@ class UniDep:
         index = self._indexes[index]
         return self.pack_sample(index)
 
+    def __iter__(self):
+        """vocab obj list iterator"""
+        for i in range(len(self)):
+            yield self[i]
+
     def __len__(self):
         return self.sample_size
 

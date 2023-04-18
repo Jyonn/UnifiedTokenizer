@@ -1,16 +1,14 @@
 import json
 import os
 import warnings
-from typing import Optional
+from typing import Optional, Type
 
 import numpy as np
 import pandas as pd
 
 from .cols import Cols
 from .column import Column, IndexColumn
-from .tok.bert_tok import BertTok
-from .tok.ent_tok import EntTok
-from .tok.id_tok import IdTok
+from .tok import BaseTok, BertTok, EntTok, IdTok
 from .vocab import Vocab
 from .vocabs import Vocabs
 
@@ -70,10 +68,15 @@ class UniTok:
                       'use vocabs instead (will be removed in 4.x version)', DeprecationWarning)
         return self.vocabs
 
-    def add_col(self, col: Column):
+    def add_col(self, col: Column | str, tok: BaseTok | Type[BaseTok] = None):
         """
         Declare a column in the DataFrame to be tokenized.
         """
+
+        if isinstance(col, str):
+            assert tok is not None, 'tok must be specified when col is a string'
+            col = Column(tok, name=col)
+
         if isinstance(col.tok, IdTok):
             if self.id_col:
                 raise ValueError(f'already exists id column {self.id_col.name} before adding {col.name}')

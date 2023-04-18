@@ -1,9 +1,12 @@
-from UniTok.tok import BaseTok
+from typing import Type
+
+
 from tqdm import tqdm
 
 from .global_setting import Global
 from .analysis.lengths import Lengths
-from .tok import IdTok
+from .tok import IdTok, BaseTok
+from .vocab import Vocab
 
 
 class SeqOperator:
@@ -42,10 +45,15 @@ class Column:
         tok (BaseTok): The tokenizer of the column.
         operator (SeqOperator): The operator of the column.
     """
-    def __init__(self, tok: BaseTok, name=None, operator: SeqOperator = None, **kwargs):
+    def __init__(self, tok: BaseTok | Type[BaseTok], name=None, operator: SeqOperator = None, **kwargs):
         self.tok = tok
         self.name = name or tok.vocab.name
         self.operator = operator
+
+        if isinstance(tok, type):
+            assert issubclass(tok, BaseTok)
+            assert name is not None, 'name must be set when tok is a class'
+            self.tok = tok(vocab=Vocab(name=name))
 
         if kwargs:
             if operator:
@@ -115,4 +123,4 @@ class Column:
 
 class IndexColumn(Column):
     def __init__(self, name='index'):
-        super().__init__(name, tok=IdTok(name=name))
+        super().__init__(tok=IdTok(name=name))

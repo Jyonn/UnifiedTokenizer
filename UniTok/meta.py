@@ -7,7 +7,7 @@ from typing import List
 class Col:
     def __init__(self, name, voc=None, max_length=None, padding=None, vocab=None):
         self.name: str = name
-        self.voc: Voc = voc or vocab
+        self.voc: Voc | str = voc or vocab
         self.max_length = max_length
         self.padding = padding
         self.list = max_length is not None
@@ -29,7 +29,7 @@ class Voc:
     def __init__(self, name, size, cols, store_dir):
         self.name: str = name
         self.size: int = size
-        self.cols: List[Col] = cols
+        self.cols: List[Col | str] = cols
         self.store_dir = store_dir
 
     def __eq__(self, other):
@@ -46,7 +46,7 @@ class Voc:
         vocab = Vocab(name=self.name).load(self.store_dir)
         vocab.save(store_dir)
 
-    def merge(self, other):
+    def merge(self, other: 'Voc'):
         cols = self.cols.copy()
         for col in other.cols:
             for _col in cols:
@@ -71,13 +71,13 @@ class Meta:
 
         data = self.load()
         self.version = data['version']
-        self.cols = data.get('cols') or data['col_info']
-        self.vocs = data.get('vocs') or data['vocab_info']
+        cols = data.get('cols') or data['col_info']
+        vocs = data.get('vocs') or data['vocab_info']
         self.id_col = data['id_col']
 
         # build col-voc graph
-        self.cols = {col: Col(**self.cols[col], name=col) for col in self.cols}
-        self.vocs = {voc: Voc(**self.vocs[voc], name=voc, store_dir=self.store_dir) for voc in self.vocs}
+        self.cols = {col: Col(**cols[col], name=col) for col in cols}  # type: dict[str, Col]
+        self.vocs = {voc: Voc(**vocs[voc], name=voc, store_dir=self.store_dir) for voc in vocs}  # type: dict[str, Voc]
 
         # connect class objects
         for col in self.cols.values():
