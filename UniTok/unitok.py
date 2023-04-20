@@ -1,7 +1,7 @@
 import json
 import os
 import warnings
-from typing import Optional, Type
+from typing import Optional, Type, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -58,7 +58,7 @@ class UniTok:
 
     def __init__(self):
         self.cols = Cols()
-        self.vocabs = Vocabs()
+        self.vocabs = Vocabs()  # type: Union[Dict[str, Vocab], Vocabs]
         self.id_col = None  # type: Optional[Column]
         self.data = None
 
@@ -68,7 +68,7 @@ class UniTok:
                       'use vocabs instead (will be removed in 4.x version)', DeprecationWarning)
         return self.vocabs
 
-    def add_col(self, col: Column | str, tok: BaseTok | Type[BaseTok] = None):
+    def add_col(self, col: Union[Column, str], tok: Union[BaseTok, Type[BaseTok]] = None):
         """
         Declare a column in the DataFrame to be tokenized.
         """

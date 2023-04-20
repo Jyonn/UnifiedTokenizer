@@ -46,7 +46,7 @@ class UniDep:
             self.print('resize sample_size to', self._sample_size)
             self.sample_size = self._sample_size
 
-        self.vocabs = Vocabs()
+        self.vocabs = Vocabs()  # type: Union[Dict[str, Vocab], Vocabs]
         for vocab_name in self.vocs:
             self.vocabs.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocabs[self.id_voc.name].o2i

@@ -30,4 +30,8 @@ class BertTok(BaseTok):
             ids = self.tokenizer.convert_tokens_to_ids(ts)
         else:
             ids = []
+
+        for index in ids:
+            self.vocab.count(index)
+
         return ids

@@ -1,5 +1,4 @@
-from typing import Type
-
+from typing import Type, Union
 
 from tqdm import tqdm
 
@@ -45,7 +44,7 @@ class Column:
         tok (BaseTok): The tokenizer of the column.
         operator (SeqOperator): The operator of the column.
     """
-    def __init__(self, tok: BaseTok | Type[BaseTok], name=None, operator: SeqOperator = None, **kwargs):
+    def __init__(self, tok: Union[BaseTok, Type[BaseTok]], name=None, operator: SeqOperator = None, **kwargs):
         self.tok = tok
         self.name = name or tok.vocab.name
         self.operator = operator

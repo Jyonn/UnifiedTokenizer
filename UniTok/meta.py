@@ -1,13 +1,13 @@
 import json
 import os
 import warnings
-from typing import List
+from typing import List, Union
 
 
 class Col:
     def __init__(self, name, voc=None, max_length=None, padding=None, vocab=None):
         self.name: str = name
-        self.voc: Voc | str = voc or vocab
+        self.voc: Union[Voc, str] = voc or vocab
         self.max_length = max_length
         self.padding = padding
         self.list = max_length is not None
@@ -29,7 +29,7 @@ class Voc:
     def __init__(self, name, size, cols, store_dir):
         self.name: str = name
         self.size: int = size
-        self.cols: List[Col | str] = cols
+        self.cols: List[Union[Col, str]] = cols
         self.store_dir = store_dir
 
     def __eq__(self, other):
