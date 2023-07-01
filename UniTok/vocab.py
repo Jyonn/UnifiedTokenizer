@@ -63,12 +63,17 @@ class Vocab:
 
     def append(self, obj):
         index = self._append(obj)
-        self.count(index)
         return index
 
-    def count(self, index):
-        if self._count_mode and index > -1:
-            self._counter[index] = self._counter.get(index, 0) + 1
+    def counts(self, indexes):
+        if self._count_mode:
+            for index in indexes:
+                if index > -1:
+                    self._counter[index] = self._counter.get(index, 0) + 1
+
+    # def count(self, index):
+    #     if self._count_mode and index > -1:
+    #         self._counter[index] = self._counter.get(index, 0) + 1
 
     def _append(self, obj):
         """

@@ -46,7 +46,7 @@ class UniDep:
             self.print('resize sample_size to', self._sample_size)
             self.sample_size = self._sample_size
 
-        self.vocabs = Vocabs()  # type: Union[Dict[str, Vocab], Vocabs]
+        self.vocabs = Vocabs()
         for vocab_name in self.vocs:
             self.vocabs.append(Vocab(name=vocab_name).load(self.store_dir))
         self.id2index = self.vocabs[self.id_voc.name].o2i
@@ -200,14 +200,14 @@ class UniDep:
 
     def export(self, store_dir):
         """
-        export unioned or filtered depot
+        export modified, union-ed or filtered depot
         """
 
         os.makedirs(store_dir, exist_ok=True)
         data = dict()
 
-        for voc in self.meta.vocs.values():
-            voc.export(store_dir)
+        for voc in self.vocabs:
+            self.vocabs[voc].save(store_dir)
 
         for sample in tqdm.tqdm(self, disable=self.silent):
             for col_name in sample:

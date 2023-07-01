@@ -41,11 +41,6 @@ class Voc:
             'cols': [col.name for col in self.cols]
         }
 
-    def export(self, store_dir):
-        from .vocab import Vocab
-        vocab = Vocab(name=self.name).load(self.store_dir)
-        vocab.save(store_dir)
-
     def merge(self, other: 'Voc'):
         cols = self.cols.copy()
         for col in other.cols:

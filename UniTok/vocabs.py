@@ -47,3 +47,6 @@ class Vocabs(dict):
 
     def __call__(self, name) -> Vocab:
         return self[name]
+
+    def __getitem__(self, item) -> Vocab:
+        return super().__getitem__(item)

@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 import warnings
 from typing import Optional, Type, Dict, Union
 
@@ -11,6 +12,7 @@ from .column import Column, IndexColumn
 from .tok import BaseTok, BertTok, EntTok, IdTok
 from .vocab import Vocab
 from .vocabs import Vocabs
+from .unidep import UniDep
 
 
 class UniTok:
@@ -204,3 +206,8 @@ class UniTok:
         )
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
         return self
+
+    def to_unidep(self):
+        store_dir = tempfile.gettempdir()
+        self.store(store_dir)
+        return UniDep(store_dir)

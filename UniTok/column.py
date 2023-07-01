@@ -65,7 +65,7 @@ class Column:
                 pad=kwargs.get('pad', 0),
             )
 
-        self.list = bool(operator) or tok.return_list is True  # whether the column is a list-element column
+        self.list = bool(self.operator) or tok.return_list is True  # whether the column is a list-element column
 
         self.data = []
         self.lengths = Lengths()

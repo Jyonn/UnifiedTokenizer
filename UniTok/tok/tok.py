@@ -44,6 +44,9 @@ class BaseTok:
         wrapped tokenize method, filter out unknown token
         """
         ids = self.t(obj)
+
+        self.vocab.counts(ids if isinstance(ids, list) else [ids])
+
         if isinstance(ids, list):
             return list(filter(lambda index: index > -1, ids))
         if ids == -1:

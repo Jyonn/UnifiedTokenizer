@@ -40,5 +40,5 @@ class NumberTok(BaseTok):
             if o >= len(self.vocab):
                 if self.vocab_size is not None:
                     raise ValueError('vocab_size is {}, but {} is given'.format(self.vocab_size, o))
-                self.vocab.extend([str(i) for i in range(len(self.vocab), o + 1)])
+                self.vocab.extend([str(i) for i in range(len(self.vocab), o + 1)], count=False)
         return obj
