@@ -26,11 +26,12 @@ class Col:
 
 
 class Voc:
-    def __init__(self, name, size, cols, store_dir):
+    def __init__(self, name, size, cols, store_dir, vocab=None):
         self.name: str = name
         self.size: int = size
         self.cols: List[Union[Col, str]] = cols
         self.store_dir = store_dir
+        self.vocab = vocab
 
     def __eq__(self, other):
         return self.name == other.name and self.size == other.size
@@ -49,11 +50,13 @@ class Voc:
                     break
             else:
                 cols.append(col)
+
         return Voc(
             name=self.name,
             size=self.size,
             cols=cols,
-            store_dir=self.store_dir
+            store_dir=self.store_dir,
+            vocab=self.vocab
         )
 
 

@@ -1,5 +1,7 @@
 import warnings
 
+from .meta import Col, Voc
+
 from .vocab import Vocab
 
 
@@ -49,4 +51,8 @@ class Vocabs(dict):
         return self[name]
 
     def __getitem__(self, item) -> Vocab:
+        if isinstance(item, Col):
+            item = item.voc
+        if isinstance(item, Voc):
+            item = item.name
         return super().__getitem__(item)

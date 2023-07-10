@@ -49,6 +49,8 @@ class UniDep:
         self.vocabs = Vocabs()
         for vocab_name in self.vocs:
             self.vocabs.append(Vocab(name=vocab_name).load(self.store_dir))
+        for voc in self.vocs:
+            self.vocs[voc].vocab = self.vocabs[voc]
         self.id2index = self.vocabs[self.id_voc.name].o2i
 
         self._indexes = list(range(self.sample_size))
@@ -221,6 +223,15 @@ class UniDep:
 
         meta_data = self.meta.get_info()
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
+
+    def reset_data(self, data):
+        """
+        reset data with new data
+        """
+        self.data = data
+        self._sample_size = len(data[self.id_col])
+        self._indexes = list(range(self._sample_size))
+        self.cached = False
 
     """
     Deprecated properties and methods
