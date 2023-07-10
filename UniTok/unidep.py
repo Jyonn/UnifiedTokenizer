@@ -229,7 +229,7 @@ class UniDep:
         reset data with new data
         """
         self.data = data
-        self._sample_size = len(data[self.id_col])
+        self.sample_size = self._sample_size = len(data[self.id_col])
         self._indexes = list(range(self._sample_size))
         self.cached = False
 
