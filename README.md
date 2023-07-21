@@ -1,15 +1,24 @@
-# UniTok V3.0
+# UniTok V3
 
-## 介绍
+## 1. 简介
 
-UniTok是一个面向机器学习的统一文本数据预处理工具。它提供了一系列预定义的分词器，以便于处理不同类型的文本数据。UniTok简单易上手，让算法工程师能更专注优化算法本身，大大降低了数据预处理的难度。
-UniDep是UniTok预处理后数据的解析工具，能和PyTorch的Dataset类配合使用。
+UniTok 是一个强大的文本预处理工具包，它提供了一整套的数据预处理工具。UniTok 主要包括两大部分：`UniTok` 和 `UniDep`。`UniTok` 负责统一处理数据，它包括分词器（Tokenizers），数据列（Columns）等组件。`UniDep` 负责数据依赖的处理，包括词汇表（Vocabs），元数据（Meta）等。
 
-## 安装
+## 2. 安装
 
-`pip install unitok>=3.0.11`
+使用pip安装：
 
-## 使用
+```bash
+pip install unitok>=3.0.11
+```
+
+## 3. 主要功能
+
+### 3.1 UniTok
+
+UniTok提供了一整套的数据预处理工具，包括不同类型的分词器、数据列的管理等。具体来说，UniTok 提供了多种类型的分词器，可以满足不同类型数据的分词需求。每个分词器都继承自 `BaseTok` 类。
+
+此外，UniTok 提供了 `Column` 类来管理数据列。每个 `Column` 对象包含一个分词器（Tokenizer）和一个序列操作器（SeqOperator）。
 
 我们以新闻推荐系统场景为例，数据集可能包含以下部分：
 
@@ -48,68 +57,96 @@ UniDep是UniTok预处理后数据的解析工具，能和PyTorch的Dataset类配
 from UniTok import UniTok, Column, Vocab
 from UniTok.tok import IdTok, BertTok, EntTok, SplitTok, NumberTok
 
-nid_vocab = Vocab('nid')  # 在新闻数据、历史数据和交互数据中都会用到
-eng_tok = BertTok(vocab_dir='bert-base-uncased', name='eng')  # 用于处理英文文本
+# Create a news id vocab, commonly used in news data, history data, and interaction data.
+nid_vocab = Vocab('nid')
 
-news_ut = UniTok().add_col(Column(
-    name='nid',  # 数据栏名称，如果和tok的name一致，可以省略
-    tok=IdTok(vocab=nid_vocab),  # 指定分词器，每个UniTok对象必须有且只能有一个IdTok
+# Create a bert tokenizer, commonly used in tokenizing title and abstract.
+eng_tok = BertTok(vocab_dir='bert-base-uncased', name='eng')
+
+# Create a news UniTok object.
+news_ut = UniTok()
+
+# Add columns to the news UniTok object.
+news_ut.add_col(Column(
+    # Specify the vocab. The column name will be set to 'nid' automatically if not specified.
+    tok=IdTok(vocab=nid_vocab),
 )).add_col(Column(
+    # The column name will be set to 'title', rather than the name of eng_tok 'eng'.
     name='title',
     tok=eng_tok,
-    max_length=20,  # 指定最大长度，超过的部分会被截断
+    max_length=20,  # Specify the max length. The exceeding part will be truncated.
 )).add_col(Column(
     name='abstract',
-    tok=eng_tok,  # 摘要和标题使用同一个分词器
-    max_length=30,  # 指定最大长度，超过的部分会被截断
+    tok=eng_tok,  # Abstract and title use the same tokenizer.
+    max_length=30,
 )).add_col(Column(
     name='category',
-    tok=EntTok(name='cat'),  # 不显式指定Vocab，会根据name自动创建
+    tok=EntTok,  # Vocab will be created automatically, and the vocab name will be set to 'category'.
 )).add_col(Column(
     name='subcat',
-    tok=EntTok(name='subcat'),
+    tok=EntTok,  # Vocab will be created automatically, and the vocab name will be set to 'subcat'.
 ))
 
-news_ut.read('news.tsv', sep='\t')  # 读取数据文件
-news_ut.tokenize()  # 运行分词
-news_ut.store('data/news')  # 保存分词结果
+# Read the data file.
+news_ut.read('news.tsv', sep='\t')
 
+# Tokenize the data.
+news_ut.tokenize() 
+
+# Store the tokenized data.
+news_ut.store('data/news')
+
+# Create a user id vocab, commonly used in user data and interaction data.
 uid_vocab = Vocab('uid')  # 在用户数据和交互数据中都会用到
 
-user_ut = UniTok().add_col(Column(
-    name='uid',
+# Create a user UniTok object.
+user_ut = UniTok()
+
+# Add columns to the user UniTok object.
+user_ut.add_col(Column(
     tok=IdTok(vocab=uid_vocab),
 )).add_col(Column(
     name='history',
-    tok=SplitTok(sep=' '),  # 历史数据中的新闻ID用空格分割
+    tok=SplitTok(sep=' '),  # The news id in the history data is separated by space.
 ))
 
-user_ut.read('user.tsv', sep='\t')  # 读取数据文件
-user_ut.tokenize()  # 运行分词
-user_ut.store('data/user')  # 保存分词结果
+# Read the data file.
+user_ut.read('user.tsv', sep='\t') 
+
+# Tokenize the data.
+user_ut.tokenize() 
+
+# Store the tokenized data.
+user_ut.store('data/user')
 
 
 def inter_tokenize(mode):
-    # 由于train/dev/test的index不同，每次预处理前都需要重新构建UniTok对象
-    # 如果不重新构建，index词表可能不准确，导致元数据和真实数据不一致
-    # 但通过UniDep解析数据后，能修正index的误差
+    # Create an interaction UniTok object.
+    inter_ut = UniTok()
     
-    inter_ut = UniTok().add_index_col(
-        # 交互数据中的index列是自动生成的，不需要指定分词器
+    # Add columns to the interaction UniTok object.
+    inter_ut.add_index_col(
+        # The index column in the interaction data is automatically generated, and the tokenizer does not need to be specified.
     ).add_col(Column(
-        name='uid',
-        tok=IdTok(vocab=uid_vocab),  # 指定和user_ut中的uid列一致
+        # Align with the uid column in user_ut.
+        tok=EntTok(vocab=uid_vocab), 
     )).add_col(Column(
-        name='nid',
-        tok=IdTok(vocab=nid_vocab),  # 指定和news_ut中的nid列一致
+        # Align with the nid column in news_ut.
+        tok=EntTok(vocab=nid_vocab),  
     )).add_col(Column(
         name='label',
-        tok=NumberTok(vocab_size=2),  # 0和1两种情况，>=3.0.11版本支持
+        # The label column in the interaction data only has two values, 0 and 1.
+        tok=NumberTok(vocab_size=2),  # NumberTok is supported by UniTok >= 3.0.11.
     ))
 
-    inter_ut.read(f'{mode}.tsv', sep='\t')  # 读取数据文件
-    inter_ut.tokenize()  # 运行分词
-    inter_ut.store(mode)  # 保存分词结果
+    # Read the data file.
+    inter_ut.read(f'{mode}.tsv', sep='\t')
+    
+    # Tokenize the data.
+    inter_ut.tokenize() 
+    
+    # Store the tokenized data.
+    inter_ut.store(mode)
 
     
 inter_tokenize('data/train')
@@ -117,12 +154,25 @@ inter_tokenize('data/dev')
 inter_tokenize('data/test')
 ```
 
-我们可以用UniDep解析数据：
+### 3.2 UniDep
+
+UniDep 是一个数据依赖处理类，可以用于加载和访问 UniTok 预处理后的数据。UniDep 包括词汇表（Vocabs），元数据（Meta）等。
+
+`Vocabs` 类是用来集中管理所有的词汇表的。每个 `Vocab` 对象包含了对象到索引的映射，索引到对象的映射，以及一些其它的属性和方法。
+
+`Meta` 类用来管理元数据，包括加载、保存和升级元数据。
+
+以下是一个简单的使用示例：
 
 ```python
 from UniTok import UniDep
 
-news_dep = UniDep('data/news')  # 读取分词结果
-print(len(news_dep))
-print(news_dep[0])
+# Load the data.
+dep = UniDep('data/news')
+
+# Get sample size.
+print(len(dep))
+
+# Get the first sample.
+print(dep[0])
 ```

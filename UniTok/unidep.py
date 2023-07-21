@@ -39,7 +39,7 @@ class UniDep:
         self.id_col = self.meta.id_col
         self.id_voc = self.cols[self.id_col].voc
         self.sample_size = self.id_voc.size
-        self.print('loaded', self.sample_size, 'samples!')
+        self.print(f'loaded {self.sample_size} samples from {self.store_dir}')
 
         self._sample_size = len(self.data[self.id_col])
         if self.sample_size != self._sample_size:
