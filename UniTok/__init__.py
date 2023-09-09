@@ -4,6 +4,7 @@ from .vocabs import Vocabs
 from .cols import Cols
 from .column import Column
 from .analysis import Lengths, Plot
+from .fut import Fut
 
 from .unidep import UniDep
 from .meta import Meta, Col, Voc
@@ -21,4 +22,5 @@ __all__ = [
     Vocab,
     Vocabs,
     Global,
+    Fut,
 ]

@@ -2,7 +2,7 @@ import json
 import os
 import random
 import warnings
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Union, Optional
 
 import numpy as np
 import tqdm
@@ -38,13 +38,13 @@ class UniDep:
 
         self.id_col = self.meta.id_col
         self.id_voc = self.cols[self.id_col].voc
-        self.sample_size = self.id_voc.size
-        self.print(f'loaded {self.sample_size} samples from {self.store_dir}')
+
+        self.sample_size = -1
+        self.set_sample_size(self.id_voc.size)
 
         self._sample_size = len(self.data[self.id_col])
         if self.sample_size != self._sample_size:
-            self.print('resize sample_size to', self._sample_size)
-            self.sample_size = self._sample_size
+            self.set_sample_size(self._sample_size)
 
         self.vocabs = Vocabs()
         for vocab_name in self.vocs:
@@ -53,8 +53,18 @@ class UniDep:
             self.vocs[voc].vocab = self.vocabs[voc]
         self.id2index = self.vocabs[self.id_voc.name].o2i
 
-        self._indexes = list(range(self.sample_size))
         self.unions = dict()  # type: Dict[str, List[UniDep]]
+
+    def set_sample_size(self, size):
+        modify_flag = self.sample_size > -1
+
+        self.sample_size = size
+        self._indexes = list(range(self.sample_size))
+
+        if modify_flag:
+            self.print('modify sample_size to', self.sample_size)
+        else:
+            self.print(f'loaded {self.sample_size} samples from {self.store_dir}')
 
     def print(self, *args, **kwargs):
         """
@@ -138,7 +148,7 @@ class UniDep:
         return str(self)
 
     """
-    Advanced methods, including union and filter
+    Advanced methods, including union, filter 
     """
 
     @staticmethod
@@ -224,18 +234,98 @@ class UniDep:
         meta_data = self.meta.get_info()
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
 
-    def reset_data(self, data):
+    """
+    Editing methods
+    """
+
+    def reset(self, data):
         """
         reset data with new data
         """
         self.data = data
-        self.sample_size = self._sample_size = len(data[self.id_col])
-        self._indexes = list(range(self._sample_size))
+        self.set_sample_size(len(data[self.id_col]))
         self.cached = False
+
+    @staticmethod
+    def _get_max_length(values):
+        if isinstance(values[0], list):
+            return max([len(value) for value in values])
+        return None
+
+    def set_vocab(self, vocab: Vocab):
+        """
+        reset or add a vocab, if vocab with same name exists, it will be reset
+        """
+        voc = Voc(
+            name=vocab.name,
+            size=len(vocab),
+            cols=[],
+            store_dir=self.store_dir,
+            vocab=vocab,
+        )
+        if vocab.name in self.vocs:
+            voc.cols = self.vocs[vocab.name].cols
+
+    def set_col(self, name: str, values: Union[list, np.ndarray], vocab: Optional[Union[str, Voc, Vocab]] = None):
+        """
+        reset or add a column, vocab with same name will not be reset (you can use set_vocab to reset it)
+        """
+        assert len(values) == self.sample_size, 'values length must be equal to sample size'
+
+        if isinstance(values, list):
+            values = np.array(values, dtype=object)
+
+        if vocab is None:
+            assert name in self.cols, 'vocab must be specified when adding a new column'
+            vocab = self.cols[name].voc
+        if isinstance(vocab, str):
+            vocab = self.vocs[vocab]
+        if isinstance(vocab, Voc):
+            vocab = vocab.vocab
+
+        if vocab.name in self.vocs:
+            voc = self.vocs[vocab.name]
+        else:
+            voc = Voc(
+                name=vocab.name,
+                size=len(vocab),
+                cols=[],
+                store_dir=self.store_dir,
+                vocab=vocab,
+            )
+
+        self.data[name] = values
+        self.cols[name] = Col(
+            name=name,
+            voc=voc,
+            vocab=vocab,
+            max_length=self._get_max_length(values),
+        )
+        voc.cols.append(self.cols[name])
+
+    def add_samples(self, samples: Dict[str, list]):
+        """
+        add samples to depot
+        """
+        sample_size = 0
+        for name, values in samples.items():
+            if isinstance(values, np.ndarray):
+                values = values.tolist()
+            assert self.sample_size == 0 or len(values) == self.sample_size, "sample size not match"
+            sample_size = len(values)
+            new_list = self.data[name].tolist()
+            new_list.extend(values)
+            self.data[name] = np.array(new_list, dtype=object)
+        self.set_sample_size(self.sample_size + sample_size)
 
     """
     Deprecated properties and methods
     """
+
+    def reset_data(self, data):
+        warnings.warn('reset_data is deprecated, '
+                      'use reset instead (will be removed in 4.x version)', DeprecationWarning)
+        self.reset(data)
 
     @property
     def meta_data(self):

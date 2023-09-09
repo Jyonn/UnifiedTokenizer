@@ -12,7 +12,6 @@ from .column import Column, IndexColumn
 from .tok import BaseTok, BertTok, EntTok, IdTok
 from .vocab import Vocab
 from .vocabs import Vocabs
-from .unidep import UniDep
 
 
 class UniTok:
@@ -59,10 +58,10 @@ class UniTok:
     VER = 'v3.0'
 
     def __init__(self):
-        self.cols = Cols()
+        self.cols = Cols()  # type: Union[Dict[str, Column], Cols]
         self.vocabs = Vocabs()  # type: Union[Dict[str, Vocab], Vocabs]
         self.id_col = None  # type: Optional[Column]
-        self.data = None
+        self.data = None  # type: Optional[pd.DataFrame]
 
     @property
     def vocab_depots(self):
@@ -102,20 +101,21 @@ class UniTok:
         self.id_col = col
         return self
 
-    def read(self, df, sep=None):
+    def read(self, df: pd.DataFrame):
         """
         Read data from a file
         """
-        if isinstance(df, str):
-            use_cols = list(self.cols.keys())
-            df = pd.read_csv(df, sep=sep, usecols=use_cols)
         self.data = df
         return self
 
     def read_file(self, df, sep=None):
         warnings.warn('read_file is deprecated, use read instead '
                       '(will be removed in 4.x version)', DeprecationWarning)
-        return self.read(df, sep)
+        if isinstance(df, str):
+            use_cols = list(self.cols.keys())
+            df = pd.read_csv(df, sep=sep, usecols=use_cols)
+        self.data = df
+        return self
 
     def __getitem__(self, col):
         """
@@ -208,6 +208,7 @@ class UniTok:
         return self
 
     def to_unidep(self):
+        from UniTok import UniDep
         store_dir = tempfile.gettempdir()
         self.store(store_dir)
         return UniDep(store_dir)
