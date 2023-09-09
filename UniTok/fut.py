@@ -98,7 +98,8 @@ class Fut:
                 max_id = 0
                 if is_list:
                     for ids in unitok.cols[col].data:
-                        max_id = max(max_id, max(ids))
+                        if ids:
+                            max_id = max(max_id, max(ids))
                 else:
                     max_id = max(unitok.cols[col].data)
                 unitok.cols[col].tok.vocab.reserve(list(range(max_id + 1)))
