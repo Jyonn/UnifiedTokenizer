@@ -39,10 +39,10 @@ class UniDep:
         self.id_col = self.meta.id_col
         self.id_voc = self.cols[self.id_col].voc
 
+        self._indexes = []
         self.sample_size = -1
         self.set_sample_size(self.id_voc.size)
 
-        self._indexes = []
         self._sample_size = len(self.data[self.id_col])
         if self.sample_size != self._sample_size:
             self.set_sample_size(self._sample_size)
@@ -195,38 +195,38 @@ class UniDep:
             self.meta.vocs = self.vocs
         return self
 
-    def _col_filter(self, filter_func: Callable, col):
-        visible_indexes = []
-
-        for index in tqdm.tqdm(self._indexes, disable=self.silent):
-            value = self.data[col][index]
-            if filter_func(value):
-                visible_indexes.append(index)
-
-        self._indexes = visible_indexes
-        self.sample_size = len(self._indexes)
-        return self
-
-    def _sample_filter(self, filter_func: Callable):
-        visible_indexes = []
-
-        for sample in tqdm.tqdm(self, disable=self.silent):
-            if filter_func(sample):
-                visible_indexes.append(sample[self.id_col])
-
-        self._indexes = visible_indexes
-        self.sample_size = len(self._indexes)
-        return self
-
     def filter(self, filter_func: Callable, col=None):
         """
         filter samples by filter_func
         :param filter_func: function to filter samples
         :param col: column name to filter, if None, filter by sample itself
         """
-        if col is None:
-            return self._sample_filter(filter_func)
-        return self._col_filter(filter_func, col)
+        visible_indexes = []
+
+        for sample in tqdm.tqdm(self, disable=self.silent):
+            target = sample if col is None else sample[col]
+            if filter_func(target):
+                visible_indexes.append(sample[self.id_col])
+
+        self._indexes = visible_indexes
+        self.sample_size = len(self._indexes)
+        return self
+
+    def reset_index(self):
+        """
+        reset index to 0, 1, 2, ...
+        """
+        data = {col: [] for col in self.cols}
+        for sample in self:
+            for col in sample:
+                data[col].append(sample[col])
+        self.reset(data)
+        tokens = data[self.id_col]
+        i2o = {i: o for i, o in enumerate(tokens)}
+        o2i = {o: i for i, o in enumerate(tokens)}
+        vocab = self.cols[self.id_col].voc.vocab  # type: Vocab
+        vocab.i2o, vocab.o2i = i2o, o2i
+        return self
 
     def export(self, store_dir):
         """
