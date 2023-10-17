@@ -2,6 +2,7 @@ import json
 import os
 import random
 import warnings
+from collections import OrderedDict
 from typing import Dict, List, Callable, Union, Optional
 
 import numpy as np
@@ -54,7 +55,8 @@ class UniDep:
             self.vocs[voc].vocab = self.vocabs[voc]
         self.id2index = self.vocabs[self.id_voc.name].o2i
 
-        self.unions = dict()  # type: Dict[str, List[UniDep]]
+        self.unions = OrderedDict()  # type: Dict[str, List[UniDep]]
+        self._deep_union = False
 
     def set_sample_size(self, size):
         modify_flag = self.sample_size > -1
@@ -84,12 +86,16 @@ class UniDep:
             return self.cached_samples[index]
 
         sample = dict()
-        for col_name in self.cols:
-            if col_name in self.data:
-                sample[col_name] = self.data[col_name][index]
-                if col_name in self.unions:
-                    for depot in self.unions[col_name]:
-                        sample.update(depot[sample[col_name]])
+
+        for col_name in self.data:
+            sample[col_name] = self.data[col_name][index]
+        if self._deep_union:
+            return sample
+
+        for col_name in self.unions:
+            col_value = sample[col_name]
+            for depot in self.unions[col_name]:
+                sample.update(depot[col_value])
         return sample
 
     def get_sample_by_id(self, obj_id):
@@ -176,6 +182,16 @@ class UniDep:
             merged[name] = vocab
         return merged
 
+    @property
+    def deep_union(self):
+        return self._deep_union
+
+    @deep_union.setter
+    def deep_union(self, value):
+        if self._deep_union != value and self.unions:
+            raise ValueError('deep_union can not be changed after union-ed')
+        self._deep_union = value
+
     def union(self, *depots: 'UniDep'):
         """
         union depots, where id columns in other depots must exist in current main depot
@@ -193,6 +209,22 @@ class UniDep:
             self.vocs = self._merge_vocs(self.vocs, depot.vocs)
             self.meta.cols = self.cols
             self.meta.vocs = self.vocs
+
+            if self._deep_union:
+                # copy all data columns to current depot
+                columns = dict()
+                for col_name in depot.cols:
+                    if col_name not in self.cols:
+                        columns[col_name] = []
+
+                for sample in self:
+                    index = sample[depot.id_col]
+                    for col_name in columns:
+                        columns[col_name].append(depot[index][col_name])
+
+                for col_name in columns:
+                    values = np.array(columns[col_name], dtype=object)
+                    self.data[col_name] = values
         return self
 
     def filter(self, filter_func: Callable, col=None):
@@ -217,15 +249,17 @@ class UniDep:
         reset index to 0, 1, 2, ...
         """
         data = {col: [] for col in self.cols}
-        for sample in self:
+        for i, sample in enumerate(self):
             for col in sample:
-                data[col].append(sample[col])
+                data[col].append(i if col == self.id_col else sample[col])
         self.reset(data)
         tokens = data[self.id_col]
         i2o = {i: o for i, o in enumerate(tokens)}
         o2i = {o: i for i, o in enumerate(tokens)}
-        vocab = self.cols[self.id_col].voc.vocab  # type: Vocab
+        voc = self.cols[self.id_col].voc
+        vocab = voc.vocab  # type: Vocab
         vocab.i2o, vocab.o2i = i2o, o2i
+        voc.size = len(vocab)
         return self
 
     def export(self, store_dir):
@@ -255,6 +289,14 @@ class UniDep:
     """
     Editing methods
     """
+
+    def select_cols(self, col_names: List[str]):
+        """
+        select columns to keep
+        """
+        for col_name in self.data:
+            if col_name not in col_names:
+                del self.data[col_name]
 
     def reset(self, data):
         """

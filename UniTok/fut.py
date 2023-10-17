@@ -27,8 +27,8 @@ class Fut:
         self.refer_cols = self.pack_refer_cols(refer_cols)
 
         self.col_names = self.data.columns.tolist()
-        self.cols = Cols()
         self.vocabs = self.get_vocabs()
+        self.col_to_vocab = self.get_col_to_vocab()
 
     @staticmethod
     def pack_refer_cols(refer_cols: Union[Callable, Iterable] = None):
@@ -60,8 +60,24 @@ class Fut:
             for refer in self.refers:
                 for col in refer.cols:
                     if self.refer_cols(col) and col in self.col_names:
-                        vocabs[col] = refer.vocabs[col]
+                        col_obj = refer.cols[col]
+                        vocabs[col_obj.voc.name] = col_obj.voc.vocab
         return vocabs
+
+    def get_col_to_vocab(self):
+        col_to_vocab = dict()
+        if not self.refer_cols:
+            for refer in self.refers:
+                for col in refer.cols:
+                    col_obj = refer.cols[col]
+                    col_to_vocab[col_obj.name] = self.vocabs[col_obj.voc.name]
+        else:
+            for refer in self.refers:
+                for col in refer.cols:
+                    if self.refer_cols(col) and col in self.col_names:
+                        col_obj = refer.cols[col]
+                        col_to_vocab[col_obj.name] = self.vocabs[col_obj.voc.name]
+        return col_to_vocab
 
     def construct(self):
         unitok = UniTok().read(self.data)
@@ -70,14 +86,14 @@ class Fut:
             unitok.add_index_col()
             unitok.id_col.data = self.data.index.tolist()
         else:
-            vocab = self.vocabs.get(self.id_col)
+            vocab = self.col_to_vocab.get(self.id_col)
             tok = IdTok(vocab=vocab) if vocab else IdTok
             unitok.add_col(
                 col=self.id_col,
                 tok=tok
             )
             unitok.id_col.data = self.data[self.id_col].tolist()
-        if not self.vocabs.get(self.id_col):
+        if not self.col_to_vocab.get(self.id_col):
             unitok.id_col.tok.vocab.reserve(unitok.id_col.data)
 
         for col in self.col_names:
@@ -85,7 +101,7 @@ class Fut:
                 continue
 
             is_list = isinstance(self.data[col][0], list)
-            vocab = self.vocabs.get(col)
+            vocab = self.col_to_vocab.get(col)
             tok = SeqTok if is_list else EntTok
             tok = tok(vocab=vocab) if vocab else tok
             unitok.add_col(
