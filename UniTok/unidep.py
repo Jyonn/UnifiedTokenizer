@@ -417,6 +417,8 @@ class UniDep:
                 store_dir=self.store_dir,
                 vocab=vocab,
             )
+            self.vocs[vocab.name] = voc
+            self.vocabs[vocab.name] = vocab
 
         self.data[name] = values
         self.cols[name] = Col(
