@@ -248,6 +248,7 @@ class UniDep:
         if old_name is self.id_col:
             self.meta.id_col = self.id_col = new_name
         self.cols[new_name] = self.cols[old_name]
+        self.cols[new_name].name = new_name
         del self.cols[old_name]
         self.data[new_name] = self.data[old_name]
         del self.data[old_name]
