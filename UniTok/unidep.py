@@ -182,11 +182,6 @@ class UniDep:
             merged[name] = vocab
         return merged
 
-    @property
-    def deep_union(self):
-        return self._deep_union
-
-    @deep_union.setter
     def deep_union(self, value):
         if self._deep_union != value and self.unions:
             raise ValueError('deep_union can not be changed after union-ed')
@@ -210,22 +205,86 @@ class UniDep:
             self.meta.cols = self.cols
             self.meta.vocs = self.vocs
 
-            if self._deep_union:
-                # copy all data columns to current depot
-                columns = dict()
-                for col_name in depot.cols:
-                    if col_name not in self.cols:
-                        columns[col_name] = []
+            if not self._deep_union:
+                continue
 
-                for sample in self:
-                    index = sample[depot.id_col]
-                    for col_name in columns:
-                        columns[col_name].append(depot[index][col_name])
+            columns = {col_name: [] for col_name in depot.cols}
 
+            for index in self.data[depot.id_col]:
                 for col_name in columns:
-                    values = np.array(columns[col_name], dtype=object)
-                    self.data[col_name] = values
+                    columns[col_name].append(depot.data[col_name][index])
+
+            for col_name in columns:
+                values = np.array(columns[col_name], dtype=object)
+                self.data[col_name] = values
         return self
+
+    def inject(self, depot: 'UniDep', col_names: Union[list, dict]):
+        if isinstance(col_names, list):
+            col_names = {col_name: col_name for col_name in col_names}
+        if depot.id_col not in self.cols:
+            raise ValueError(f'current depot has no column named {depot.id_col}')
+
+        columns = {col_names[col_name]: [] for col_name in col_names}
+        for index in self.data[depot.id_col]:
+            for col_name in columns:
+                columns[col_name].append(depot.data[col_name][index])
+
+        for col_name in columns:
+            self.set_col(
+                name=col_name,
+                values=columns[col_name],
+                vocab=depot.cols[col_name].voc.vocab,
+            )
+
+    def rename_col(self, old_name: str, new_name: str):
+        """
+        rename a column
+        """
+        if old_name not in self.cols:
+            raise ValueError(f'column {old_name} not found')
+        if new_name in self.cols:
+            raise ValueError(f'column {new_name} already exists')
+        if old_name is self.id_col:
+            self.meta.id_col = self.id_col = new_name
+        self.cols[new_name] = self.cols[old_name]
+        del self.cols[old_name]
+        self.data[new_name] = self.data[old_name]
+        del self.data[old_name]
+
+    def rename_vocab(self, old_name: str, new_name: str):
+        """
+        rename a vocab
+        """
+        if old_name not in self.vocs:
+            raise ValueError(f'vocab {old_name} not found')
+        if new_name in self.vocs:
+            if self.vocs[old_name].size != self.vocs[new_name].size:
+                raise ValueError(f'vocab {new_name} already exists with different size')
+            self.vocs[new_name].cols.extend(self.vocs[old_name].cols)
+        else:
+            self.vocs[new_name] = self.vocs[old_name]
+            self.vocabs[new_name] = self.vocabs[old_name]
+            self.vocs[new_name].name = new_name
+            self.vocabs[new_name].name = new_name
+        del self.vocs[old_name]
+        del self.vocabs[old_name]
+
+    def remove_col(self, col_name: str):
+        """
+        remove a column
+        """
+        if col_name not in self.cols:
+            raise ValueError(f'column {col_name} not found')
+        if col_name is self.id_col:
+            raise ValueError('id column can not be removed')
+        voc = self.cols[col_name].voc
+        voc.cols = [col for col in voc.cols if col.name != col_name]
+        if not voc.cols:
+            del self.vocs[voc.name]
+            del self.vocabs[voc.name]
+        del self.cols[col_name]
+        del self.data[col_name]
 
     def filter(self, filter_func: Callable, col=None):
         """
@@ -294,9 +353,14 @@ class UniDep:
         """
         select columns to keep
         """
+        delete_cols = []
         for col_name in self.data:
             if col_name not in col_names:
-                del self.data[col_name]
+                delete_cols.append(col_name)
+
+        for col_name in delete_cols:
+            del self.data[col_name]
+            del self.cols[col_name]
 
     def reset(self, data):
         """
