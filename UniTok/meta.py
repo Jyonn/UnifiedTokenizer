@@ -4,9 +4,15 @@ import warnings
 from typing import List, Union
 
 
-class Col:
+class Ent:
+    def __init__(self, name, **kwargs):
+        self.name = name
+        
+
+class Col(Ent):
     def __init__(self, name, voc=None, max_length=None, padding=None, vocab=None):
-        self.name: str = name
+        super().__init__(name=name)
+
         self.voc: Union[Voc, str] = voc or vocab
         self.max_length = max_length
         self.padding = padding
@@ -25,9 +31,10 @@ class Col:
         return info
 
 
-class Voc:
+class Voc(Ent):
     def __init__(self, name, size, cols, store_dir, vocab=None):
-        self.name: str = name
+        super().__init__(name=name)
+
         self.size: int = size
         self.cols: List[Union[Col, str]] = cols
         self.store_dir = store_dir

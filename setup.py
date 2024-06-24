@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf8')
 
 setup(
     name='UniTok',
-    version='3.4.8',
+    version='3.5.2',
     keywords=['token', 'tokenizer'],
     description='Unified Tokenizer',
     long_description=long_description,
@@ -23,6 +23,12 @@ setup(
         'numpy',
         'pandas',
         'transformers',
-        'oba'
+        'oba',
+        'prettytable',
     ],
+    entry_points={
+        'console_scripts': [
+            'unitok = UniTok.__main__:main'
+        ]
+    }
 )

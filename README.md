@@ -1,15 +1,22 @@
-# UniTok V3
+# UniTok V3: 类SQL数据预处理工具包
+
+Updated on 2023.11.04
 
 ## 1. 简介
 
-UniTok 是一个强大的文本预处理工具包，它提供了一整套的数据预处理工具。UniTok 主要包括两大部分：`UniTok` 和 `UniDep`。`UniTok` 负责统一处理数据，它包括分词器（Tokenizers），数据列（Columns）等组件。`UniDep` 负责数据依赖的处理，包括词汇表（Vocabs），元数据（Meta）等。
+UniTok 是史上第一个类SQL的数据预处理工具包，提供了一整套的数据封装和编辑工具。
+
+UniTok 主要包括两大组件：负责统一数据处理的`UniTok` 和 负责数据读取和二次编辑的`UniDep`：
+- `UniTok` 通过分词器（Tokenizers）和数据列（Columns）等组件将生数据（Raw Data）进行分词与ID化操作，并最终以numpy数组格式存储为一张数据表。
+- `UniDep` 读取由`UniTok`生成的数据表以及元数据（如词表信息），可以直接与Pytorch的Dataset结合使用，也可以完成二次编辑、和其他数据表合并、导出等操作。
+- 在3.1.9版本后，我们推出`Fut` 组件，它是`UniTok`的替代品，可以更快速地完成数据预处理。
 
 ## 2. 安装
 
 使用pip安装：
 
 ```bash
-pip install unitok>=3.0.11
+pip install unitok>=3.4.8
 ```
 
 ## 3. 主要功能

@@ -1,0 +1,7 @@
+pandas
+transformers
+termplot
+numpy
+tqdm
+prettytable
+setuptools

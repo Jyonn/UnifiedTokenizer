@@ -3,7 +3,7 @@ import os
 import random
 import warnings
 from collections import OrderedDict
-from typing import Dict, List, Callable, Union, Optional
+from typing import Dict, List, Callable, Union, Optional, cast
 
 import numpy as np
 import tqdm
@@ -16,11 +16,20 @@ from .vocabs import Vocabs
 class UniDep:
     VER = Meta.VER
 
-    def __init__(self, store_dir, silent=False):
+    def __init__(self, store_dir, verbose=True, silent=None):
+        """
+        Unified Data Depot Initialization
+        :param store_dir: Store directory of the data processed by our UniTok or Fut
+        :param verbose:
+        """
         self.store_dir = os.path.expanduser(store_dir)
         self.meta = Meta(self.store_dir)
 
-        self.silent = silent
+        if silent is not None:
+            warnings.warn('unidep.silent is deprecated, '
+                          'use verbose instead (will be removed in 4.x version)', DeprecationWarning)
+            verbose = not silent
+        self.verbose = verbose
 
         self.cached = False
         self.cached_samples = []
@@ -28,8 +37,8 @@ class UniDep:
         self.data_path = os.path.join(self.store_dir, 'data.npy')
         self.data = np.load(self.data_path, allow_pickle=True)
         try:
-            # noinspection PyTypeChecker
-            self.data: dict = self.data.item()
+            self.data = self.data.item()
+            self.data = cast(dict, self.data)
         except Exception as err:
             print(err)
             return
@@ -53,7 +62,7 @@ class UniDep:
             self.vocabs.append(Vocab(name=vocab_name).load(self.store_dir))
         for voc in self.vocs:
             self.vocs[voc].vocab = self.vocabs[voc]
-        self.id2index = self.vocabs[self.id_voc.name].o2i
+        self.id2index = self.id_voc.vocab.o2i
 
         self.unions = OrderedDict()  # type: Dict[str, List[UniDep]]
         self._deep_union = False
@@ -74,7 +83,7 @@ class UniDep:
         silent-aware printer
         """
 
-        if self.silent:
+        if not self.verbose:
             return
         print(*args, **kwargs)
 
@@ -111,7 +120,7 @@ class UniDep:
 
         self.cached = False
         self.cached_samples = [None] * self._sample_size
-        for sample in tqdm.tqdm(self, disable=self.silent):
+        for sample in tqdm.tqdm(self, disable=not self.verbose):
             self.cached_samples[sample[self.id_col]] = sample
         self.cached = True
 
@@ -139,7 +148,7 @@ class UniDep:
         """
         introduction = f"""
         UniDep ({self.meta.parse_version(self.meta.version)}): {self.store_dir}
-        
+
         Sample Size: {self.sample_size}
         Id Column: {self.id_col}
         Columns:\n"""
@@ -187,18 +196,26 @@ class UniDep:
             raise ValueError('deep_union can not be changed after union-ed')
         self._deep_union = value
 
-    def union(self, *depots: 'UniDep'):
+    def union(self, *depots: 'UniDep', union_col: str = None):
         """
         union depots, where id columns in other depots must exist in current main depot
         """
+        if union_col and union_col not in self.cols:
+            raise ValueError(f'current depot has no column named {union_col}')
+
         for depot in depots:
             # check if id col exists in current depot
-            if depot.id_col not in self.cols:
-                raise ValueError('current depot has no column named {}'.format(depot.id_col))
+            if not union_col:
+                assert depot.id_col in self.cols, (
+                    ValueError(f'current depot has no column named {union_col}'))
+            else:
+                assert self.cols[union_col].voc == depot.cols[depot.id_col].voc, (
+                    ValueError(f'the vocabs of union col {union_col} and target id col {depot.id_col} are not matched'))
+            current_union_col = union_col or depot.id_col
 
-            if depot.id_col not in self.unions:
-                self.unions[depot.id_col] = []
-            self.unions[depot.id_col].append(depot)
+            if current_union_col not in self.unions:
+                self.unions[current_union_col] = []
+            self.unions[current_union_col].append(depot)
 
             self.cols = self._merge_cols(self.cols, depot.cols)
             self.vocs = self._merge_vocs(self.vocs, depot.vocs)
@@ -210,7 +227,7 @@ class UniDep:
 
             columns = {col_name: [] for col_name in depot.cols}
 
-            for index in self.data[depot.id_col]:
+            for index in self.data[current_union_col]:
                 for col_name in columns:
                     columns[col_name].append(depot.data[col_name][index])
 
@@ -295,7 +312,7 @@ class UniDep:
         """
         visible_indexes = []
 
-        for sample in tqdm.tqdm(self, disable=self.silent):
+        for sample in tqdm.tqdm(self, disable=not self.verbose):
             target = sample if col is None else sample[col]
             if filter_func(target):
                 visible_indexes.append(sample[self.id_col])
@@ -333,7 +350,7 @@ class UniDep:
         for voc in self.vocabs:
             self.vocabs[voc].save(store_dir)
 
-        for sample in tqdm.tqdm(self, disable=self.silent):
+        for sample in tqdm.tqdm(self, disable=not self.verbose):
             for col_name in sample:
                 if col_name not in data:
                     data[col_name] = []
@@ -341,7 +358,7 @@ class UniDep:
 
         for col_name in data:
             data[col_name] = np.array(data[col_name])
-        np.save(os.path.join(store_dir, 'data.npy'), data, allow_pickle=True)
+        np.save(os.path.join(store_dir, 'data.npy'), cast(np.ndarray, data), allow_pickle=True)
 
         meta_data = self.meta.get_info()
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
@@ -373,7 +390,7 @@ class UniDep:
 
     @staticmethod
     def _get_max_length(values):
-        if isinstance(values[0], list):
+        if isinstance(values[0], list) or isinstance(values[0], np.ndarray):
             return max([len(value) for value in values])
         return None
 
