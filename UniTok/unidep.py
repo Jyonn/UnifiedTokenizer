@@ -357,8 +357,8 @@ class UniDep:
                 data[col_name].append(sample[col_name])
 
         for col_name in data:
-            data[col_name] = np.array(data[col_name])
-        np.save(os.path.join(store_dir, 'data.npy'), cast(np.ndarray, data), allow_pickle=True)
+            data[col_name] = np.array(data[col_name], dtype=object)
+        np.save(os.path.join(store_dir, 'data.npy'), data, allow_pickle=True)
 
         meta_data = self.meta.get_info()
         json.dump(meta_data, open(os.path.join(store_dir, 'meta.data.json'), 'w'), indent=2)
