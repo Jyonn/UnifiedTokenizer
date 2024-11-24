@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf8')
 
 setup(
     name='UniTok',
-    version='3.5.2',
+    version='3.5.3',
     keywords=['token', 'tokenizer'],
     description='Unified Tokenizer',
     long_description=long_description,
@@ -14,7 +14,7 @@ setup(
     license='MIT Licence',
     url='https://github.com/Jyonn/UnifiedTokenizer',
     author='Jyonn Liu',
-    author_email='i@6-79.cn',
+    author_email='liu@qijiong.work',
     platforms='any',
     packages=find_packages(),
     install_requires=[
