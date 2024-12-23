@@ -1,5 +1,5 @@
-from unitokbeta.tokenizer import BertTokenizer
-from unitokbeta.utils.handler import JsonHandler
+from unitok.tokenizer import BertTokenizer
+from unitok.utils.handler import JsonHandler
 
 
 class JsonEntitiesTokenizer(BertTokenizer):

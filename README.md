@@ -61,8 +61,8 @@ UniTok提供了一整套的数据预处理工具，包括不同类型的分词�
 通过以下代码，我们可以针对每个文件构建一个UniTok对象：
 
 ```python
-from UniTok import UniTok, Column, Vocab
-from UniTok.tok import IdTok, BertTok, EntTok, SplitTok, NumberTok
+from UniTokv3 import UniTok, Column, Vocab
+from UniTokv3.tok import IdTok, BertTok, EntTok, SplitTok, NumberTok
 
 # Create a news id vocab, commonly used in news data, history data, and interaction data.
 nid_vocab = Vocab('nid')
@@ -98,7 +98,7 @@ news_ut.add_col(Column(
 news_ut.read('news.tsv', sep='\t')
 
 # Tokenize the data.
-news_ut.tokenize() 
+news_ut.tokenize()
 
 # Store the tokenized data.
 news_ut.store('data/news')
@@ -118,10 +118,10 @@ user_ut.add_col(Column(
 ))
 
 # Read the data file.
-user_ut.read('user.tsv', sep='\t') 
+user_ut.read('user.tsv', sep='\t')
 
 # Tokenize the data.
-user_ut.tokenize() 
+user_ut.tokenize()
 
 # Store the tokenized data.
 user_ut.store('data/user')
@@ -130,16 +130,16 @@ user_ut.store('data/user')
 def inter_tokenize(mode):
     # Create an interaction UniTok object.
     inter_ut = UniTok()
-    
+
     # Add columns to the interaction UniTok object.
     inter_ut.add_index_col(
         # The index column in the interaction data is automatically generated, and the tokenizer does not need to be specified.
     ).add_col(Column(
         # Align with the uid column in user_ut.
-        tok=EntTok(vocab=uid_vocab), 
+        tok=EntTok(vocab=uid_vocab),
     )).add_col(Column(
         # Align with the nid column in news_ut.
-        tok=EntTok(vocab=nid_vocab),  
+        tok=EntTok(vocab=nid_vocab),
     )).add_col(Column(
         name='label',
         # The label column in the interaction data only has two values, 0 and 1.
@@ -148,14 +148,14 @@ def inter_tokenize(mode):
 
     # Read the data file.
     inter_ut.read(f'{mode}.tsv', sep='\t')
-    
+
     # Tokenize the data.
-    inter_ut.tokenize() 
-    
+    inter_ut.tokenize()
+
     # Store the tokenized data.
     inter_ut.store(mode)
 
-    
+
 inter_tokenize('data/train')
 inter_tokenize('data/dev')
 inter_tokenize('data/test')
@@ -172,7 +172,7 @@ UniDep 是一个数据依赖处理类，可以用于加载和访问 UniTok 预�
 以下是一个简单的使用示例：
 
 ```python
-from UniTok import UniDep
+from UniTokv3 import UniDep
 
 # Load the data.
 dep = UniDep('data/news')
