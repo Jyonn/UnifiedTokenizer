@@ -7,7 +7,7 @@ from rich.table import Table
 from rich.text import Text
 from tqdm import tqdm
 
-from unitok import info, warning
+from unitok.utils.verbose import info, warning
 from unitok.meta import Meta
 from unitok.status import Status
 from unitok.tokenizer import BaseTokenizer, TokenizerHub, DigitTokenizer
@@ -26,6 +26,7 @@ class UniTok(Status):
         self.data = dict()
         self.meta = Meta()
         self.key_job: Optional[Job] = None
+        self.save_dir = None
 
         # sample size is the number of rows in the table, while len(self) is the number of legal indices
         self._legal_indices = []
@@ -62,8 +63,9 @@ class UniTok(Status):
     def load(cls, save_dir: str, tokenizer_lib: str = None):
         with cls() as ut:
             ParamHub.add(Symbols.tokenizer, tokenizer_lib)
+            ut.save_dir = save_dir
             ut.meta = Meta.load(save_dir)
-            ut.data = PickleHandler.load(cls.filepath(save_dir))
+            ut.data = PickleHandler.load(ut.filepath)
 
         for job in ut.meta.jobs:
             if job.key:
@@ -81,17 +83,17 @@ class UniTok(Status):
 
     @Status.require_not_initialized
     def save(self, save_dir: str):
+        self.save_dir = save_dir
         os.makedirs(save_dir, exist_ok=True)
 
-        self.meta.save(save_dir)
-
+        self.meta.save(self.save_dir)
         for vocab in self.meta.vocabularies:
             vocab.save(save_dir)
-        PickleHandler.save(self.data, self.filepath(save_dir))
+        PickleHandler.save(self.data, self.filepath)
 
-    @staticmethod
-    def filepath(save_dir: str):
-        return os.path.join(save_dir, 'data.pkl')
+    @property
+    def filepath(self):
+        return os.path.join(self.save_dir, 'data.pkl')
 
     def __enter__(self):
         from unitok.utils import Space
@@ -377,9 +379,8 @@ class UniTok(Status):
             yield self[i]
 
     def __str__(self):
-        warning('__str__ is deprecated, '
-                'please use summarize() method to display UniTok table')
-        return f'UniTok(size={self._sample_size})'
+        ut_name = self.save_dir or 'Runtime Instance'
+        return f'UniTok({ut_name}, size={self._sample_size})'
 
     def __repr__(self):
         return str(self)

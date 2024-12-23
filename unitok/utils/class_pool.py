@@ -3,7 +3,7 @@ import importlib
 import os
 import sys
 
-from unitok import warning
+from unitok.utils.verbose import warning
 from unitok.tokenizer import BaseTokenizer
 from unitok.utils import Symbols
 from unitok.utils.hub import ParamHub

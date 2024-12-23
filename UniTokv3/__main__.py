@@ -102,10 +102,11 @@ def upgrade():
         for value in data[col]:
             if isinstance(value, np.ndarray):
                 pkl_data[col].append(value.tolist())
-            if isinstance(value, (np.int64, np.int32)):
+            elif isinstance(value, (np.int64, np.int32)):
                 pkl_data[col].append(int(value))
             else:
-                assert isinstance(value, (int, list))
+                if not isinstance(value, (int, list)):
+                    raise ValueError(f'Unsupported data type {type(value)}: {value}')
                 pkl_data[col].append(value)
 
     data = pkl_data

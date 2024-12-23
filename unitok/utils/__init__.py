@@ -1,3 +1,4 @@
+from unitok.utils.verbose import Verbose, warning, error, info, debug
 from unitok.utils.space import Space
 from unitok.utils.instance import Instance
 from unitok.utils.map import Map
@@ -11,5 +12,10 @@ __all__ = [
     'Symbols',
     'Symbol',
     'JsonHandler',
-    'PickleHandler'
+    'PickleHandler',
+    'Verbose',
+    'warning',
+    'error',
+    'info',
+    'debug'
 ]

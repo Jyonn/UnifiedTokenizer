@@ -1,4 +1,4 @@
-from unitok import warning
+from unitok.utils.verbose import warning
 from unitok.utils import Space
 
 

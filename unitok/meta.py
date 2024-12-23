@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-from unitok import warning
+from unitok.utils.verbose import warning
 from unitok.job import Job
 from unitok.tokenizer import TokenizerHub
 from unitok.tokenizer.union_tokenizer import UnionTokenizer

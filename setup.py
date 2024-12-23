@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf8')
 
 setup(
     name='UniTok',
-    version='4.0.1b0',
+    version='4.0.0',
     keywords=['token', 'tokenizer'],
     description='Unified Tokenizer',
     long_description=long_description,
@@ -28,9 +28,9 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'unitok = UniTok.__main__:main',
-            'unidep-upgrade-v4 = UniTok.__main__:upgrade',
-            'unitokbeta = unitokbeta.__main__:main'
+            'unitokv3 = UniTokv3.__main__:main',
+            'unidep-upgrade-v4 = UniTokv3.__main__:upgrade',
+            'unitok = unitok.__main__:main'
         ]
     }
 )
