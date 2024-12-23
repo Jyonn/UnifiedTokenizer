@@ -63,6 +63,13 @@ class UniTok:
         self.id_col = None  # type: Optional[Column]
         self.data = None  # type: Optional[pd.DataFrame]
 
+        print(
+            "UniTok-v4 is coming!\n"
+            "Try the new version with:\n"
+            "    `from unitokbeta.unitok import UniTok`\n"
+            "Documentation: https://unitok.github.io"
+        )
+
     @property
     def vocab_depots(self):
         warnings.warn('vocab_depot is deprecated, '

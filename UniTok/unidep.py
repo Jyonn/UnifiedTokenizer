@@ -31,6 +31,13 @@ class UniDep:
             verbose = not silent
         self.verbose = verbose
 
+        self.print(
+            "UniTok-v4 is coming!\n"
+            "Try the new version with:\n"
+            "    `from unitokbeta.unitok import UniTok`\n"
+            "Documentation: https://unitok.github.io"
+        )
+
         self.cached = False
         self.cached_samples = []
 
