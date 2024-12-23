@@ -8,11 +8,11 @@ from rich.console import Console
 from rich.table import Table
 
 from UniTokv3 import UniDep, Meta, Vocab
-from unitok.vocabulary import Vocab as VocabBeta
-from unitok.job import Job as JobBeta
+from unitok.vocabulary import Vocab as Vocabv4
+from unitok.job import Job as Jobv4
 from unitok.tokenizer.unknown_tokenizer import UnknownTokenizer
-from unitok.unitok import UniTok as UniTokBeta
-from unitok.meta import Meta as MetaBeta
+from unitok.unitok import UniTok as UniTokv4
+from unitok.meta import Meta as Metav4
 
 
 class SupportsWrite(Protocol):
@@ -91,7 +91,7 @@ def upgrade():
     args = parser.parse_args()
     path = args.path
 
-    print(f'Upgrade {path} to {MetaBeta.version}')
+    print(f'Upgrade {path} to {Metav4.version}')
 
     data = np.load(f'{path}/data.npy', allow_pickle=True).item()
     data = cast(dict, data)
@@ -117,12 +117,12 @@ def upgrade():
     meta = Meta(store_dir=path)
     meta.load()
 
-    with UniTokBeta() as ut:
+    with UniTokv4() as ut:
 
         for voc in meta.vocs.values():
             print(f'Upgrade vocabulary {voc.name}')
             vocab = Vocab(name=voc.name).load(path)
-            vocab_beta = VocabBeta(name=voc.name)
+            vocab_beta = Vocabv4(name=voc.name)
             vocab_beta.extend(vocab.get_tokens())
             ut.meta.vocabularies.add(vocab_beta)
 
@@ -149,7 +149,7 @@ def upgrade():
                     tokenizer_id='upgrade_' + col.name,
                     vocab=vocab_beta,
                 )
-                job = JobBeta(
+                job = Jobv4(
                     name=col.name,
                     column=col.name,
                     tokenizer=tokenizer,

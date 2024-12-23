@@ -34,7 +34,9 @@ class UniDep:
         self.print(
             "UniTok-v4 is coming!\n"
             "Try the new version with:\n"
-            "    `from unitokbeta.unitok import UniTok`\n"
+            "    `from unitok import UniTok`\n"
+            "UniTok-v3 is still available, but will be deprecated in the future:\n"
+            "    `from UniTokv3 import UniTok`\n"
             "Documentation: https://unitok.github.io"
         )
 
