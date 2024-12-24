@@ -25,6 +25,7 @@ setup(
         'transformers',
         'oba',
         'prettytable',
+        'rich'
     ],
     entry_points={
         'console_scripts': [
