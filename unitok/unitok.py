@@ -319,8 +319,8 @@ class UniTok(Status):
 
     def pack(self, index):
         sample = dict()
-        for job in self.meta.jobs:
-            sample[job.name] = self.data[job.name][index]
+        for name in self.data:
+            sample[name] = self.data[name][index]
 
         for job in self._soft_unions:
             index = sample[job.name]
