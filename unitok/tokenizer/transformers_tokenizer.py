@@ -2,18 +2,20 @@ from typing import Union
 
 from transformers import AutoTokenizer
 
-from unitok.tokenizer import BaseTokenizer
 from UniTokv3.vocab import Vocab
+from unitok.tokenizer import CachableTokenizer
 
 
-class TransformersTokenizer(BaseTokenizer):
+class TransformersTokenizer(CachableTokenizer):
     return_list = True
     param_list = ['key']
 
-    def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, key: str = None, **kwargs):
-        super().__init__(vocab=vocab, tokenizer_id=tokenizer_id)
+    def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, use_cache=False, key: str = None, **kwargs):
+        super().__init__(vocab=vocab, tokenizer_id=tokenizer_id, use_cache=use_cache)
         self.key = key
+
         self.kwargs = kwargs
+        self.param_list.extend(list(kwargs.keys()))
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.key, **self.kwargs)
         self.vocab.extend(self._generate_token_list())
@@ -37,6 +39,9 @@ class TransformersTokenizer(BaseTokenizer):
             if token is None:
                 raise ValueError(f'transformer({self.key}): missing token {idx}')
         return token_list
+
+    def __getattr__(self, item):
+        return self.kwargs[item]
 
     def __call__(self, obj):
         tokens = self.tokenizer.tokenize(obj)

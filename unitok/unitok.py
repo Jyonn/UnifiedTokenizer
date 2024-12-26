@@ -7,6 +7,7 @@ from rich.table import Table
 from rich.text import Text
 from tqdm import tqdm
 
+from unitok.selector import Selector
 from unitok.utils.verbose import info, warning
 from unitok.meta import Meta
 from unitok.status import Status
@@ -317,23 +318,40 @@ class UniTok(Status):
         console.print(introduction_header)
         console.print(table)
 
-    def pack(self, index):
+    def _pack_soft_union(self, index):
         sample = dict()
-        for name in self.data:
-            sample[name] = self.data[name][index]
+        for job in self.meta.jobs:
+            if not job.from_union:
+                sample[job.name] = self.data[job.name][index]
 
         for job in self._soft_unions:
             index = sample[job.name]
             for ut in self._soft_unions[job]:
                 sample.update(ut[index])
+
         return sample
 
-    def _parse_index(self, index):
+    def _pack_hard_union(self, index):
+        sample = dict()
+        for job in self.meta.jobs:
+            sample[job.name] = self.data[job.name][index]
+        return sample
+
+    def pack(self, index):
+        if self.is_soft_union:
+            return self._pack_soft_union(index)
+        return self._pack_hard_union(index)
+
+    def _parse_index(self, index) -> [int, Optional[Selector]]:
         selector = None
         if isinstance(index, tuple):
             if len(index) != 2:
                 raise ValueError('index should be tuple with 2 elements: (index, selector)')
             index, selector = index
+            if not isinstance(selector, Selector):
+                if not isinstance(selector, tuple):
+                    selector = (selector,)
+                selector = Selector(self.meta, *selector)
 
         if isinstance(index, str):
             # key_id is used
@@ -362,10 +380,15 @@ class UniTok(Status):
         if selector is None:
             return sample
 
-        if isinstance(selector, Job):
-            selector = selector.name
-        if isinstance(selector, str):
-            return sample[selector]
+        return selector(sample)
+
+    @Status.require_not_initialized
+    def select(self, sample, selector: Union[Selector, str, Job, tuple]):
+        if not isinstance(selector, Selector):
+            if not isinstance(selector, tuple):
+                selector = (selector,)
+            selector = Selector(self.meta, *selector)
+        return selector(sample)
 
     def get_sample_by_id(self, key_id):
         index = self.key_job.tokenizer.vocab[key_id]
@@ -409,3 +432,33 @@ class UniTok(Status):
         self._legal_indices = _legal_indices
         self._legal_flags = _legal_flags
         return self
+
+    @Status.require_not_initialized
+    def retruncate(self, job: Union[Job, str], truncate: int):
+        if isinstance(job, str):
+            job = self.meta.jobs[job]
+
+        if truncate == 0:
+            warning(f'retruncate method with truncate=0 will do nothing')
+
+        if abs(truncate) >= job.max_len:
+            warning(f'Job {job.name} has the max length of {job.max_len}, which is shorter than truncate value')
+
+        if not job.return_list:
+            raise ValueError(f'Job {job.name} does not return list, not applicable to the retruncate method.')
+
+        if self.is_soft_union and job.from_union:
+            raise ValueError(f'Job {job.name} is a soft union job, please use hard union or save-and-load the unitok.')
+
+        slicer = job.get_slice(truncate)
+        max_len = 0
+
+        series = []
+        for i in range(len(self)):
+            value = self.data[job.name][i][slicer]
+            if len(value) > max_len:
+                max_len = len(value)
+            series.append(value)
+
+        job.max_len = max_len
+        self.data[job.name] = series

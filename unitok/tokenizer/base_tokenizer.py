@@ -12,7 +12,12 @@ class BaseTokenizer(abc.ABC):
 
     prefix = 'auto_'
 
-    def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, **kwargs):
+    def __init__(
+            self,
+            vocab: Union[str, Vocab],
+            tokenizer_id: str = None,
+            **kwargs
+    ):
         if isinstance(vocab, str):
             if VocabHub.has(vocab):
                 self.vocab = VocabHub.get(vocab)

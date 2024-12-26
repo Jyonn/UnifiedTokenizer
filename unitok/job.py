@@ -1,3 +1,5 @@
+from unitok.tokenizer.union_tokenizer import UnionTokenizer
+
 from unitok.tokenizer import BaseTokenizer
 from unitok.utils import Symbols, Instance
 from unitok.utils.hub import Hub
@@ -22,6 +24,7 @@ class Job:
         self.slice: slice = self.get_slice(truncate)
         self.key: bool = key
         self.max_len = max_len
+        self.from_union = isinstance(self.tokenizer, UnionTokenizer)
 
         JobHub.add(self.name, self)
 
