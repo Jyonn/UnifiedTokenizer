@@ -1,5 +1,6 @@
 import os
 
+from unitok import PickleHandler
 from unitok.utils import Map, Instance
 from unitok.utils.hub import Hub
 from unitok.vocabulary.counter import Counter
@@ -124,8 +125,7 @@ class Vocabulary:
             save_dir = self.filepath(save_dir)
 
         self.o2i, self.i2o = {}, {}
-        with open(save_dir, 'r') as f:
-            objs = f.read().strip().split('\n')
+        objs = PickleHandler.load(save_dir)
         for index, obj in enumerate(objs):
             self.o2i[obj] = index
             self.i2o[index] = obj
@@ -134,8 +134,7 @@ class Vocabulary:
 
     def save(self, save_dir):
         store_path = self.filepath(save_dir)
-        with open(store_path, 'w') as f:
-            f.write('\n'.join(self))
+        PickleHandler.save(list(self), store_path)
 
         return self
 

@@ -14,6 +14,6 @@ class PickleHandler:
         return pickle.load(open(path, "rb"))
 
     @staticmethod
-    def save(data: dict, path: str):
+    def save(data: any, path: str):
         with open(path, "wb") as f:
             pickle.dump(data, cast(SupportsWrite, f))
