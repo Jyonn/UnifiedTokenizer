@@ -3,18 +3,18 @@ from typing import Union
 from transformers import AutoTokenizer
 
 from UniTokv3.vocab import Vocab
-from unitok.tokenizer import CachableTokenizer
+from unitok import BaseTokenizer
 
 
-class TransformersTokenizer(CachableTokenizer):
+class TransformersTokenizer(BaseTokenizer):
     return_list = True
 
-    def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, use_cache=False, key: str = None, **kwargs):
-        super().__init__(vocab=vocab, tokenizer_id=tokenizer_id, use_cache=use_cache)
+    def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, key: str = None, **kwargs):
+        super().__init__(vocab=vocab, tokenizer_id=tokenizer_id)
         self.key = key
 
         self.kwargs = kwargs
-        self.param_list = ['key', 'use_cache']
+        self.param_list = ['key']
         self.param_list.extend(list(kwargs.keys()))
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.key, **self.kwargs)
@@ -52,4 +52,5 @@ class BertTokenizer(TransformersTokenizer):
     param_list = []
 
     def __init__(self, **kwargs):
+        kwargs.pop('key', None)
         super().__init__(key='bert-base-uncased', **kwargs)

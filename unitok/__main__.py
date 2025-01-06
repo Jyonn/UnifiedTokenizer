@@ -65,14 +65,27 @@ def summarize():
         ut.summarize()
 
 
+def remove():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path', type=str, default='.', help='path to a unitok data directory')
+    parser.add_argument('--name', type=str, help='job name to remove')
+    args, _ = parser.parse_known_args()
+
+    with UniTok.load(args.path) as ut:
+        ut.remove_job(args.name)
+        ut.save(args.path)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--action', '-a', type=str, default='summarize', choices=['summarize', 'integrate'])
+    parser.add_argument('--action', '-a', type=str, default='summarize', choices=['summarize', 'integrate', 'remove'])
 
     args, _ = parser.parse_known_args()
     action = args.action
 
     if action == 'integrate':
         integrate()
+    elif action == 'remove':
+        remove()
     else:
         summarize()

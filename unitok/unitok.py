@@ -462,3 +462,28 @@ class UniTok(Status):
 
         job.max_len = max_len
         self.data[job.name] = series
+
+    def remove_job(self, job: Union[Job, str]):
+        if isinstance(job, str):
+            job = self.meta.jobs[job]
+
+        if job.key:
+            raise ValueError('key job cannot be removed')
+
+        self.meta.jobs.remove(job)
+
+        tokenizer = job.tokenizer
+        for j in self.meta.jobs:
+            if j.tokenizer == tokenizer:
+                break
+        else:
+            self.meta.tokenizers.remove(tokenizer)
+            vocab = tokenizer.vocab
+            for t in self.meta.tokenizers:
+                if t.vocab == vocab:
+                    break
+            else:
+                self.meta.vocabularies.remove(vocab)
+
+        if job.is_processed:
+            self.data.pop(job.name)
