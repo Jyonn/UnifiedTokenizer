@@ -6,8 +6,8 @@ long_description = (this_directory / "README.md").read_text(encoding='utf8')
 
 setup(
     name='UniTok',
-    version='4.1.7',
-    keywords=['token', 'tokenizer'],
+    version='4.1.8',
+    keywords=['token', 'tokenizer', 'NLP', 'transformers', 'glove', 'bert', 'llama'],
     description='Unified Tokenizer',
     long_description=long_description,
     long_description_content_type='text/markdown',

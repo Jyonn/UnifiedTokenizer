@@ -2,6 +2,7 @@ import argparse
 
 import pandas as pd
 
+from unitok import Vocab
 from unitok.tokenizer import BaseTokenizer
 from unitok.unitok import UniTok
 from unitok.utils.class_pool import ClassPool
@@ -47,9 +48,20 @@ def integrate():
             else:
                 raise ValueError(f'Unknown tokenizer id: {args.tokenizer_id}')
         else:
-            assert args.tokenizer is not None and args.vocab is not None, 'Tokenizer classname and vocabulary must be specified'
+            if args.tokenizer is None and args.vocab is None:
+                raise ValueError('Tokenizer classname and vocabulary must be specified')
+
+            if args.vocab.endswith('.vocab'):
+                if '/' in args.vocab:
+                    vocab_path, vocab_name = args.vocab.rsplit('/', 1)
+                else:
+                    vocab_path, vocab_name = '.', args.vocab
+                vocab_name = vocab_name[:-6]
+                args.vocab = Vocab(vocab_name).load(vocab_path)
+
             tokenizers = ClassPool.tokenizers(args.lib)
-            assert args.tokenizer in tokenizers, f'Unknown tokenizer: {args.tokenizer}. Available tokenizers: {tokenizers.keys()}'
+            if args.tokenizer not in tokenizers:
+                raise ValueError(f'Unknown tokenizer: {args.tokenizer}. Available tokenizers: {tokenizers.keys()}')
             tokenizer = tokenizers[args.tokenizer](vocab=args.vocab, **tokenizer_params)
 
         ut.add_job(tokenizer=tokenizer, column=args.column, name=args.name, truncate=args.truncate)
