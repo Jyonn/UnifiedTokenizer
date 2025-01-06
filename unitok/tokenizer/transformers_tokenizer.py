@@ -8,13 +8,13 @@ from unitok.tokenizer import CachableTokenizer
 
 class TransformersTokenizer(CachableTokenizer):
     return_list = True
-    param_list = ['key']
 
     def __init__(self, vocab: Union[str, Vocab], tokenizer_id: str = None, use_cache=False, key: str = None, **kwargs):
         super().__init__(vocab=vocab, tokenizer_id=tokenizer_id, use_cache=use_cache)
         self.key = key
 
         self.kwargs = kwargs
+        self.param_list = ['key', 'use_cache']
         self.param_list.extend(list(kwargs.keys()))
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.key, **self.kwargs)
