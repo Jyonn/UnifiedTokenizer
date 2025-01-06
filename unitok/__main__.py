@@ -29,7 +29,7 @@ def integrate():
         if arg.startswith('--t.'):
             current_param = arg[4:]
         elif arg.startswith('--tokenizer.'):
-            current_param = arg[11:]
+            current_param = arg[12:]
 
     if args.file.endswith('.csv') or args.file.endswith('.tsv'):
         df = pd.read_csv(args.file, sep='\t')

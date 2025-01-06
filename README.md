@@ -16,17 +16,18 @@ UniTok is designed to simplify preprocessing by offering reusable components suc
 
 ### Changes and Comparisons
 
-| Feature           | UniTok v3                                                   | UniTok v4                                           | Comments                                                                      |
-|-------------------|-------------------------------------------------------------|-----------------------------------------------------|-------------------------------------------------------------------------------|
-| `UniTok` class    | Solely for tokenization                                     | Manages the entire preprocessing lifecycle          |                                                                               |
-| `UniDep` class    | Data loading and combining                                  | Removed                                             | V4 combines the functionalities of `UniTok` and `UniDep` into a single class. |
-| `Column` class    | Column name is for both the original and tokenized datasets | N/A                                                 | V4 introduces a `Job` class.                                                  |
-| `Job` class       | N/A                                                         | Defines how a specific column should be tokenized   |                                                                               |
-| `Tokenizer` class | Ambiguous return type definition                            | `return_list` parameter must be of type `bool`      |                                                                               |
-| `Tokenizer` class | Only supports `BertTokenizer` for text processing           | Supports all Tokenizers in the transformers library | New `TransformersTokenizer` class                                             |
-| `analyse` method  | Supported                                                   | Not supported Currently                             |                                                                               |
-| `Meta` class      | Only for human-friendly displaying                          | Manager for `Job`, `Tokenizer`, and `Vocab`         |                                                                               |
-| `unitok` command  | Visualization in the terminal                               | More colorful and detailed output                   |                                                                               | 
+| Feature                         | UniTok v3                                                   | UniTok v4                                           | Comments                                                                      |
+|---------------------------------|-------------------------------------------------------------|-----------------------------------------------------|-------------------------------------------------------------------------------|
+| `UniTok` class                  | Solely for tokenization                                     | Manages the entire preprocessing lifecycle          |                                                                               |
+| `UniDep` class                  | Data loading and combining                                  | Removed                                             | V4 combines the functionalities of `UniTok` and `UniDep` into a single class. |
+| `Column` class                  | Column name is for both the original and tokenized datasets | N/A                                                 | V4 introduces a `Job` class.                                                  |
+| `Job` class                     | N/A                                                         | Defines how a specific column should be tokenized   |                                                                               |
+| `Tokenizer` class               | Ambiguous return type definition                            | `return_list` parameter must be of type `bool`      |                                                                               |
+| `Tokenizer` class               | Only supports `BertTokenizer` for text processing           | Supports all Tokenizers in the transformers library | New `TransformersTokenizer` class                                             |
+| `analyse` method                | Supported                                                   | Not supported Currently                             |                                                                               |
+| `Meta` class                    | Only for human-friendly displaying                          | Manager for `Job`, `Tokenizer`, and `Vocab`         |                                                                               |
+| `unitok` command                | Visualization in the terminal                               | More colorful and detailed output                   |                                                                               |
+| `Vocab` class (unitok >= 4.1.0) | Save and load vocabulary using text files                   | Save and load vocabulary using pickle files         | Avoids issues with special characters in text files                           |
 
 ### How to Migrate the Processed Data
 
