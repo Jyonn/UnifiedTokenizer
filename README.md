@@ -1,16 +1,15 @@
 # UniTok V4
 
-If you want to use the old version, please refer to [v3](README_v3.md) in Chinese.
+The documentation for v3, old version, can be found [here](README_v3.md) in Chinese.
 
 ## Overview
 
 [![PyPI version](https://badge.fury.io/py/unitok.svg)](https://badge.fury.io/py/unitok)
 
-Welcome to the UniTok documentation! 
+Welcome to the UniTok v4! 
 This library provides a unified preprocessing solution for machine learning datasets, handling diverse data types like text, categorical features, and numerical values. 
-It introduces **SQL-like** data table combinations and a modular workflow that transitions datasets through three states: `initialized`, `tokenized`, and `organized`.
 
-UniTok is designed to simplify preprocessing by offering reusable components such as tokenizers and vocabularies, making it flexible for various datasets and scenarios.
+Please refer to [UniTok Handbook](https://unitok.qijiong.work) for more detailed information.
 
 ## Road from V3 to V4
 

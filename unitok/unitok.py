@@ -51,7 +51,7 @@ class UniTok(Status):
         if self._union_type is None:
             self._union_type = union_type
         elif self._union_type != union_type:
-            raise ValueError(f'union type is already set: {self._union_type}')
+            raise ValueError(f'Union type is already set: {self._union_type}')
 
     @Status.require_not_initialized
     def init_indices(self):
@@ -340,6 +340,7 @@ class UniTok(Status):
             sample[job.name] = self.data[job.name][index]
         return sample
 
+    @Status.require_not_initialized
     def pack(self, index):
         if self.is_soft_union:
             return self._pack_soft_union(index)
@@ -392,10 +393,6 @@ class UniTok(Status):
                 selector = (selector,)
             selector = Selector(self.meta, *selector)
         return selector(sample)
-
-    def get_sample_by_id(self, key_id):
-        index = self.key_job.tokenizer.vocab[key_id]
-        return self[index]
 
     def __len__(self):
         return len(self._legal_indices)
