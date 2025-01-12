@@ -1,6 +1,7 @@
 import argparse
 
 import pandas as pd
+from pigmento import pnt
 
 from unitok import Vocab
 from unitok.tokenizer import BaseTokenizer
@@ -40,14 +41,18 @@ def integrate():
         raise ValueError(f'Unsupported file format: {args.file}')
 
     with UniTok.load(args.path, tokenizer_lib=args.lib) as ut:
+        tokenizer = None
+
         if args.tokenizer_id:
             for t in ut.meta.tokenizers:  # type: BaseTokenizer
                 if t.get_tokenizer_id() == args.tokenizer_id:
                     tokenizer = t
                     break
             else:
-                raise ValueError(f'Unknown tokenizer id: {args.tokenizer_id}')
-        else:
+                pnt(f'Unknown tokenizer id: {args.tokenizer_id}, will create a new tokenizer')
+                tokenizer_params['tokenizer_id'] = args.tokenizer_id
+
+        if not tokenizer:
             if args.tokenizer is None and args.vocab is None:
                 raise ValueError('Tokenizer classname and vocabulary must be specified')
 

@@ -1,3 +1,6 @@
+from typing import Union
+
+from unitok import TokenizerHub, VocabHub
 from unitok.tokenizer.union_tokenizer import UnionTokenizer
 
 from unitok.tokenizer import BaseTokenizer
@@ -8,7 +11,7 @@ from unitok.utils.hub import Hub
 class Job:
     def __init__(
             self,
-            tokenizer: BaseTokenizer,
+            tokenizer: Union[BaseTokenizer, str],
             column: str,
             name: str = None,
             truncate: int = None,
@@ -16,7 +19,13 @@ class Job:
             key: bool = False,
             max_len: int = 0,
     ):
+        if isinstance(tokenizer, str):
+            if TokenizerHub.has(tokenizer):
+                tokenizer = TokenizerHub.get(tokenizer)
+            else:
+                raise ValueError(f"Tokenizer {tokenizer} not found in the tokenizer hub.")
         self.tokenizer: BaseTokenizer = tokenizer
+
         self.column: str = column
         self.name: str = name
         self.truncate: int = truncate
@@ -26,7 +35,8 @@ class Job:
         self.max_len = max_len
         self.from_union = isinstance(self.tokenizer, UnionTokenizer)
 
-        JobHub.add(self.name, self)
+        JobHub.add(self)
+        VocabHub.add(self.tokenizer.vocab)
 
     @property
     def return_list(self):
@@ -77,3 +87,8 @@ class Job:
 
 class JobHub(Hub[Job]):
     _instance = Instance(compulsory_space=True)
+
+    @classmethod
+    def add(cls, key, obj: Job = None):
+        key, obj = key.name, key
+        return super().add(key, obj)

@@ -173,7 +173,7 @@ class UniTok(Status):
             if tokenizer.return_list:
                 raise AttributeError('Column content of the key job should be tokenized into atomic value')
             if self.key_job:
-                raise ValueError(f'key key already exists: {self.key_job.name}')
+                raise ValueError(f'Key column already exists: {self.key_job.name}')
             self.key_job = job
 
     @Status.require_not_organized
@@ -282,7 +282,10 @@ class UniTok(Status):
 
         # Prepare introduction header
         introduction_header = Text.assemble(
-            (f"UniTok ({self.meta.parse_version(self.meta.version)})\n", "bold cyan"),
+            (
+                f"UniTok (v{self.meta.parse_version(Meta.version)}), "
+                f"Data (v{self.meta.parse_version(self.meta.version)})\n",
+                "bold cyan"),
             (f"Sample Size: {self._sample_size}\n", "green"),
             (f"ID Column: {self.key_job.name}\n", "magenta"),
             style="dim"

@@ -15,7 +15,7 @@ from unitok.vocabulary import Vocab, VocabHub
 
 
 class Meta:
-    version = 'unidep-v4beta'
+    version = 'unidep-v4'
 
     def __init__(self):
         self.note = ('Not compatible with unitok-v3 or lower version, '
@@ -116,6 +116,7 @@ class Meta:
         meta.vocabularies = VocabSet({cls.parse_vocabulary(**v).load(save_dir) for v in kwargs.get('vocabularies')})
         meta.tokenizers = TokenizerSet({cls.parse_tokenizer(**t) for t in kwargs.get('tokenizers')})
         meta.jobs = JobSet({cls.parse_job(**j) for j in kwargs.get('jobs')})
+        meta.version = kwargs.get('version')
 
         return meta
 

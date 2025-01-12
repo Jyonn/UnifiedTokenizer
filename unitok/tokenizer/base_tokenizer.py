@@ -28,7 +28,8 @@ class BaseTokenizer(abc.ABC):
 
         self._tokenizer_id = tokenizer_id
 
-        TokenizerHub.add(self.get_tokenizer_id(), self)
+        TokenizerHub.add(self)
+        VocabHub.add(self.vocab)
 
     def get_tokenizer_id(self):
         if self._tokenizer_id is None:
@@ -81,3 +82,8 @@ class BaseTokenizer(abc.ABC):
 
 class TokenizerHub(Hub[BaseTokenizer]):
     _instance = Instance()
+
+    @classmethod
+    def add(cls, key, obj: BaseTokenizer = None):
+        key, obj = key.get_tokenizer_id(), key
+        return super().add(key, obj)

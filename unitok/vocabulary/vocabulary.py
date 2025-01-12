@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Union
 
 from unitok import PickleHandler
 from unitok.utils import Map, Instance
@@ -18,7 +19,7 @@ class Vocabulary:
         self._editable = True  # whether vocab is editable
         self.counter = Counter()
 
-        VocabularyHub.add(self.name, self)
+        VocabularyHub.add(self)
 
     def equals(self, other: 'Vocabulary'):
         return self.name == other.name and len(self) == len(other)
@@ -43,7 +44,7 @@ class Vocabulary:
         """
         return [self.append(obj) for obj in objs]
 
-    def append(self, obj, oov_token=None):
+    def append(self, obj, oov_token: Optional[Union[int, str]] = None):
         obj = str(obj)
         if obj not in self.o2i:
             if '\n' in obj:
@@ -52,7 +53,11 @@ class Vocabulary:
             if not self._editable:
                 if oov_token is None:
                     raise ValueError(f'the fixed vocab {self.name} is not allowed to add new token ({obj})')
-                return oov_token
+                if isinstance(oov_token, str):
+                    return self[oov_token]
+                if len(self) > oov_token >= 0:
+                    return oov_token
+                raise ValueError(f'oov_token ({oov_token}) is not in the vocab')
 
             index = len(self)
             self.o2i[obj] = index
@@ -81,12 +86,19 @@ class Vocabulary:
             return self.i2o[item]
         return self.o2i[item]
 
+    def __contains__(self, item: str):
+        return item in self.o2i
+
     def __str__(self):
         return f'Vocabulary({self.name}, vocab_size={len(self)})'
 
     """
     Editable Methods
     """
+
+    @property
+    def editable(self):
+        return self._editable
 
     def allow_edit(self):
         self._editable = True
@@ -113,8 +125,8 @@ class Vocabulary:
     Save & Load Methods
     """
 
-    def filepath(self, store_dir):
-        return os.path.join(store_dir, self.filename)
+    def filepath(self, save_dir):
+        return os.path.join(save_dir, self.filename)
 
     @property
     def filename(self):
@@ -147,3 +159,8 @@ class Vocabulary:
 
 class VocabularyHub(Hub[Vocabulary]):
     _instance = Instance()
+
+    @classmethod
+    def add(cls, key, obj: Vocabulary = None):
+        key, obj = key.name, key
+        return super().add(key, obj)

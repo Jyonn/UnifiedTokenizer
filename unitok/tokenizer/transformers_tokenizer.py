@@ -1,9 +1,10 @@
 from typing import Union
 
+from pigmento import pnt
 from transformers import AutoTokenizer
 
-from UniTokv3.vocab import Vocab
-from unitok import BaseTokenizer
+from unitok.vocabulary import Vocab
+from unitok.tokenizer import BaseTokenizer
 
 
 class TransformersTokenizer(BaseTokenizer):
@@ -21,11 +22,16 @@ class TransformersTokenizer(BaseTokenizer):
         self.vocab.extend(self._generate_token_list())
 
     def _generate_token_list(self):
+        if not hasattr(self.tokenizer, 'vocab'):
+            pnt(f'transformer({self.key}): does not provide vocabulary, generating placeholders instead')
+            return list(range(self.tokenizer.vocab_size))
+
         tokens = self.tokenizer.vocab
         if isinstance(tokens, list):
             return tokens
         if not isinstance(tokens, dict):
-            raise ValueError(f'transformer({self.key}): unsupported type of vocabulary')
+            pnt(f'transformer({self.key}): unsupported type of vocabulary, generating placeholders instead')
+            return list(range(self.tokenizer.vocab_size))
 
         num_tokens = len(tokens)
         token_ids = list(tokens.values())
@@ -45,7 +51,10 @@ class TransformersTokenizer(BaseTokenizer):
 
     def __call__(self, obj):
         tokens = self.tokenizer.tokenize(obj)
-        return super().__call__(tokens)
+        tokens = self.tokenizer.convert_tokens_to_ids(tokens)
+        for token in tokens:
+            self.vocab.counter(token)
+        return tokens
 
 
 class BertTokenizer(TransformersTokenizer):

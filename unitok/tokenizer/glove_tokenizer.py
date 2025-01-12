@@ -1,10 +1,11 @@
 import nltk
 
-from unitok import VocabHub
+from unitok.vocabulary import VocabHub
 from unitok.tokenizer import BaseTokenizer
 
 
 class GloVeTokenizer(BaseTokenizer):
+    return_list = True
     param_list = ['language']
 
     def __init__(self, vocab, language='english', **kwargs):
@@ -14,8 +15,7 @@ class GloVeTokenizer(BaseTokenizer):
         super().__init__(vocab=vocab, **kwargs)
 
         self.language = language
-        nltk.download('punkt')
 
     def __call__(self, obj):
-        objs = nltk.tokenize.word_tokenize(obj.lower())
+        objs = nltk.tokenize.word_tokenize(obj.lower(), language=self.language)
         return [self.vocab[o] for o in objs if o in self.vocab]

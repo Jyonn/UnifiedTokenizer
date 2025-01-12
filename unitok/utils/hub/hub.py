@@ -11,7 +11,7 @@ class Hub(abc.ABC, Generic[T]):
     _instance: Instance
 
     @classmethod
-    def add(cls, key, obj: T):
+    def add(cls, key, obj: T = None):
         instance = cls._instance.current()
         if key in instance and instance[key] is not obj:
             raise ValueError(f'Conflict object declaration: {obj} and {instance[key]}')
