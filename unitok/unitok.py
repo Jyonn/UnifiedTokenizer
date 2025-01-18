@@ -98,12 +98,12 @@ class UniTok(Status):
 
     def __enter__(self):
         from unitok.utils import Space
-        Space.set(self)
+        Space.push(self)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         from unitok.utils import Space
-        Space.unset()
+        Space.pop(self)
 
     @Status.require_initialized
     def add_index_job(self, name: str = 'index', tokenizer: DigitTokenizer = None):
