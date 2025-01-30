@@ -277,6 +277,21 @@ class UniTok(Status):
                 self.data[job.name] = union_data[job.name]
 
     @Status.require_not_initialized
+    @Status.to_organized
+    def replicate(self, job: Union[Job, str], new_name: str):
+        if isinstance(job, str):
+            job = self.meta.jobs[job]
+
+        if not job.is_processed:
+            raise ValueError(f'job {job.name} is not processed')
+
+        if job.from_union and self.is_soft_union:
+            raise ValueError(f'job {job.name} is from a soft union, please use hard union or save-and-load the unitok.')
+
+        new_job = job.clone(name=new_name)
+        self.data[new_job.name] = self.data[job.name]
+
+    @Status.require_not_initialized
     def summarize(self):
         console = Console()
 

@@ -164,3 +164,7 @@ class VocabularyHub(Hub[Vocabulary]):
     def add(cls, key, obj: Vocabulary = None):
         key, obj = key.name, key
         return super().add(key, obj)
+
+    @classmethod
+    def notequal(cls, a: Vocabulary, b: Vocabulary) -> bool:
+        return a.name != b.name or a.size != b.size

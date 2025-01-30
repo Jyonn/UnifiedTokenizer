@@ -13,9 +13,13 @@ class Hub(abc.ABC, Generic[T]):
     @classmethod
     def add(cls, key, obj: T = None):
         instance = cls._instance.current()
-        if key in instance and instance[key] is not obj:
+        if key in instance and cls.notequal(instance[key], obj):
             raise ValueError(f'Conflict object declaration: {obj} and {instance[key]}')
         instance[key] = obj
+
+    @classmethod
+    def notequal(cls, a: T, b: T) -> bool:
+        return a is not b
 
     @classmethod
     def get(cls, name: str, **kwargs) -> T:
