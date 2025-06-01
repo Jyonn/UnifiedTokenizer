@@ -278,7 +278,7 @@ class UniTok(Status):
 
     @Status.require_not_initialized
     @Status.to_organized
-    def replicate(self, job: Union[Job, str], new_name: str):
+    def replicate(self, job: Union[Job, str], new_name: str, lazy=False):
         if isinstance(job, str):
             job = self.meta.jobs[job]
 
@@ -289,7 +289,13 @@ class UniTok(Status):
             raise ValueError(f'job {job.name} is from a soft union, please use hard union or save-and-load the unitok.')
 
         new_job = job.clone(name=new_name)
-        self.data[new_job.name] = self.data[job.name]
+        self.meta.jobs.add(new_job)
+
+        if lazy or not job.return_list:
+            self.data[new_job.name] = self.data[job.name]
+        else:
+            # deep copy the data
+            self.data[new_job.name] = [line.copy() for line in self.data[job.name]]
 
     @Status.require_not_initialized
     def summarize(self):

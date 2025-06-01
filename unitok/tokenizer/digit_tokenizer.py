@@ -31,3 +31,4 @@ class DigitsTokenizer(DigitTokenizer):
         obj = [int(o) for o in obj]
         for o in obj:
             super().__call__(o)
+        return obj

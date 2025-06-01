@@ -56,6 +56,15 @@ class TransformersTokenizer(BaseTokenizer):
             self.vocab.counter(token)
         return tokens
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['tokenizer'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.key, **self.kwargs)
+
 
 class BertTokenizer(TransformersTokenizer):
     param_list = []
