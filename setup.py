@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text(encoding='utf8')
 
 setup(
     name='UniTok',
-    version='4.4.0',
+    version='4.4.1',
     keywords=['token', 'tokenizer', 'NLP', 'transformers', 'glove', 'bert', 'llama'],
     description='Unified Tokenizer',
     long_description=long_description,
@@ -25,7 +25,8 @@ setup(
         'transformers',
         'oba',
         'prettytable',
-        'rich'
+        'rich',
+        'fastparquet'
     ],
     entry_points={
         'console_scripts': [

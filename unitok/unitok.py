@@ -41,12 +41,12 @@ class UniTok(Status):
 
     @property
     def key_job(self):
-        warnings.deprecated('key_job is deprecated, use key_feat instead', stacklevel=2)
+        warnings.warn('key_job is deprecated, use key_feat instead', DeprecationWarning, stacklevel=2)
         return self.key_feature
 
     @key_job.setter
     def key_job(self, value):
-        warnings.deprecated('key_job is deprecated, use key_feat instead', stacklevel=2)
+        warnings.warn('key_job is deprecated, use key_feat instead', DeprecationWarning, stacklevel=2)
         self.key_feature = value
 
     @property
@@ -130,7 +130,7 @@ class UniTok(Status):
         )
 
     def add_index_job(self, name: str = 'index', tokenizer: DigitTokenizer = None):
-        warnings.deprecated('`add_index_job` is deprecated, use `add_job` instead', stacklevel=2)
+        warnings.warn('`add_index_job` is deprecated, use `add_job` instead', DeprecationWarning, stacklevel=2)
         return self.add_index_feature(name=name, tokenizer=tokenizer)
 
     def add_job(
@@ -141,7 +141,7 @@ class UniTok(Status):
             truncate: int = None,
             key: bool = False,
     ):
-        warnings.deprecated('`add_job` is deprecated, use `add_feature` instead', stacklevel=2)
+        warnings.warn('`add_job` is deprecated, use `add_feature` instead', DeprecationWarning, stacklevel=2)
         return self.add_feature(
             tokenizer=tokenizer,
             column=column,
@@ -543,5 +543,5 @@ class UniTok(Status):
             self.data.pop(feature.name)
 
     def remove_job(self, feature: Union[Feature, str]):
-        warnings.deprecated(f'`remove_job` is deprecated, use `remove_feature` instead.', stacklevel=2)
+        warnings.warn(f'`remove_job` is deprecated, use `remove_feature` instead.', DeprecationWarning, stacklevel=2)
         self.remove_feature(feature)

@@ -66,7 +66,7 @@ class Meta:
 
     @staticmethod
     def parse_job(name: str, column: str, tokenizer: str, truncate: int, order: int, key: bool, max_len: int):
-        warnings.deprecated('`parse_job` is deprecated, use `parse_feature` instead.', stacklevel=2)
+        warnings.warn('`parse_job` is deprecated, use `parse_feature` instead.', DeprecationWarning, stacklevel=2)
         return Meta.parse_feature(name, column, tokenizer, truncate, order, key, max_len)
 
     @staticmethod
