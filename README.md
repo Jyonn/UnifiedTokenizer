@@ -15,16 +15,18 @@ Please refer to [UniTok Handbook](https://unitok.qijiong.work) for more detailed
 
 ### Changes and Comparisons
 
+> After UniTok 4.4.0, `Job` is renamed to `Feature`. 
+
 | Feature                         | UniTok v3                                                   | UniTok v4                                           | Comments                                                                      |
 |---------------------------------|-------------------------------------------------------------|-----------------------------------------------------|-------------------------------------------------------------------------------|
 | `UniTok` class                  | Solely for tokenization                                     | Manages the entire preprocessing lifecycle          |                                                                               |
 | `UniDep` class                  | Data loading and combining                                  | Removed                                             | V4 combines the functionalities of `UniTok` and `UniDep` into a single class. |
-| `Column` class                  | Column name is for both the original and tokenized datasets | N/A                                                 | V4 introduces a `Job` class.                                                  |
-| `Job` class                     | N/A                                                         | Defines how a specific column should be tokenized   |                                                                               |
+| `Column` class                  | Column name is for both the original and tokenized datasets | N/A                                                 | V4 introduces a `Feature` class.                                              |
+| `Feature` class                 | N/A                                                         | Defines how a specific column should be tokenized   |                                                                               |
 | `Tokenizer` class               | Ambiguous return type definition                            | `return_list` parameter must be of type `bool`      |                                                                               |
 | `Tokenizer` class               | Only supports `BertTokenizer` for text processing           | Supports all Tokenizers in the transformers library | New `TransformersTokenizer` class                                             |
 | `analyse` method                | Supported                                                   | Not supported Currently                             |                                                                               |
-| `Meta` class                    | Only for human-friendly displaying                          | Manager for `Job`, `Tokenizer`, and `Vocab`         |                                                                               |
+| `Meta` class                    | Only for human-friendly displaying                          | Manager for `Feature`, `Tokenizer`, and `Vocab`     |                                                                               |
 | `unitok` command                | Visualization in the terminal                               | More colorful and detailed output                   |                                                                               |
 | `Vocab` class (unitok >= 4.1.0) | Save and load vocabulary using text files                   | Save and load vocabulary using pickle files         | Avoids issues with special characters in text files                           |
 
@@ -62,13 +64,13 @@ pip install unitok
 **Components**
 
 - UniTok: Manages the dataset preprocessing lifecycle.
-- Job: Defines how a specific column should be tokenized.
+- Feature: Defines how a specific column should be tokenized.
 - Tokenizer: Encodes data using various methods (e.g., BERT, splitting by delimiters).
 - Vocabulary: Stores and manages unique tokens across datasets.
 
-**Primary Key (key_job)**
+**Primary Key (key_feature)**
 
-The `key_job` acts as the primary key for operations like `getitem` and `union`, ensuring consistency across datasets.
+The `key_feature` acts as the primary key for operations like `getitem` and `union`, ensuring consistency across datasets.
 
 ## Usage Guide
 
@@ -100,9 +102,9 @@ interaction = pd.read_csv(
 )
 ```
 
-### Defining and Adding Jobs
+### Defining and Adding Features
 
-Define tokenization jobs for different columns:
+Define tokenization features for different columns:
 
 ```python
 from unitok import UniTok, Vocab
@@ -115,23 +117,23 @@ with UniTok() as item_ut:
     bert_tokenizer = BertTokenizer(vocab='bert')
     llama_tokenizer = TransformersTokenizer(vocab='llama', key='huggyllama/llama-7b')
 
-    item_ut.add_job(tokenizer=EntityTokenizer(vocab=item_vocab), column='nid', key=True)
-    item_ut.add_job(tokenizer=bert_tokenizer, column='title', name='title@bert', truncate=20)
-    item_ut.add_job(tokenizer=llama_tokenizer, column='title', name='title@llama', truncate=20)
-    item_ut.add_job(tokenizer=bert_tokenizer, column='abstract', name='abstract@bert', truncate=50)
-    item_ut.add_job(tokenizer=llama_tokenizer, column='abstract', name='abstract@llama', truncate=50)
-    item_ut.add_job(tokenizer=EntityTokenizer(vocab='category'), column='category')
-    item_ut.add_job(tokenizer=EntityTokenizer(vocab='subcategory'), column='subcategory')
+    item_ut.add_feature(tokenizer=EntityTokenizer(vocab=item_vocab), column='nid', key=True)
+    item_ut.add_feature(tokenizer=bert_tokenizer, column='title', name='title@bert', truncate=20)
+    item_ut.add_feature(tokenizer=llama_tokenizer, column='title', name='title@llama', truncate=20)
+    item_ut.add_feature(tokenizer=bert_tokenizer, column='abstract', name='abstract@bert', truncate=50)
+    item_ut.add_feature(tokenizer=llama_tokenizer, column='abstract', name='abstract@llama', truncate=50)
+    item_ut.add_feature(tokenizer=EntityTokenizer(vocab='category'), column='category')
+    item_ut.add_feature(tokenizer=EntityTokenizer(vocab='subcategory'), column='subcategory')
 
 with UniTok() as user_ut:
-    user_ut.add_job(tokenizer=EntityTokenizer(vocab=user_vocab), column='uid', key=True)
-    user_ut.add_job(tokenizer=SplitTokenizer(vocab=item_vocab, sep=','), column='history', truncate=30)
+    user_ut.add_feature(tokenizer=EntityTokenizer(vocab=user_vocab), column='uid', key=True)
+    user_ut.add_feature(tokenizer=SplitTokenizer(vocab=item_vocab, sep=','), column='history', truncate=30)
 
 with UniTok() as inter_ut:
-    inter_ut.add_index_job(name='index')
-    inter_ut.add_job(tokenizer=EntityTokenizer(vocab=user_vocab), column='uid')
-    inter_ut.add_job(tokenizer=EntityTokenizer(vocab=item_vocab), column='nid')
-    inter_ut.add_job(tokenizer=DigitTokenizer(vocab='click', vocab_size=2), column='click')
+    inter_ut.add_index_feature(name='index')
+    inter_ut.add_feature(tokenizer=EntityTokenizer(vocab=user_vocab), column='uid')
+    inter_ut.add_feature(tokenizer=EntityTokenizer(vocab=item_vocab), column='nid')
+    inter_ut.add_feature(tokenizer=DigitTokenizer(vocab='click', vocab_size=2), column='click')
 ```
 
 ### Tokenizing Data
@@ -177,7 +179,7 @@ UniTok (4beta)
 Sample Size: 10
 ID Column: nid
 
-                                                                                 Jobs                                                                                  
+                                                                                 Features                                                                                  
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
 ┃ Tokenizer                            ┃     Tokenizer ID      ┃ Column Mapping                               ┃ Vocab                             ┃    Max Length     ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩

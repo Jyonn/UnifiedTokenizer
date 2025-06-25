@@ -9,7 +9,7 @@ from rich.table import Table
 
 from UniTokv3 import UniDep, Meta, Vocab
 from unitok.vocabulary import Vocab as Vocabv4
-from unitok.job import Job as Jobv4
+from unitok.feature import Feature as Featurev4
 from unitok.tokenizer.unknown_tokenizer import UnknownTokenizer
 from unitok.unitok import UniTok as UniTokv4
 from unitok.meta import Meta as Metav4
@@ -127,7 +127,7 @@ def upgrade():
             ut.meta.vocabularies.add(vocab_beta)
 
             for col in voc.cols:
-                print(f'\tUpgrade job {col.name}')
+                print(f'\tUpgrade feature {col.name}')
                 col_data = data[col.name]
                 if not len(col_data):
                     print(f'\t\tWarning: empty column {col.name}, defaulting to an atom column')
@@ -149,7 +149,7 @@ def upgrade():
                     tokenizer_id='upgrade_' + col.name,
                     vocab=vocab_beta,
                 )
-                job = Jobv4(
+                feature = Featurev4(
                     name=col.name,
                     column=col.name,
                     tokenizer=tokenizer,
@@ -159,7 +159,7 @@ def upgrade():
                     max_len=max_len,
                 )
                 ut.meta.tokenizers.add(tokenizer)
-                ut.meta.jobs.add(job)
+                ut.meta.features.add(feature)
 
     ut.meta.save(path)
 

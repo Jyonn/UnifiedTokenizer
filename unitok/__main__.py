@@ -15,7 +15,7 @@ def integrate():
     parser.add_argument('--file', '-f', type=str, help='csv, tsv, parquet format data')
     parser.add_argument('--lib', type=str, default=None, help='custom tokenizer library')
     parser.add_argument('--column', '-c', type=str, help='column name to tokenize')
-    parser.add_argument('--name', '-n', type=str, help='job name and export column name')
+    parser.add_argument('--name', '-n', type=str, help='export feature name name')
     parser.add_argument('--vocab', '-v', type=str, default=None, help='vocabulary name')
     parser.add_argument('--tokenizer', '-t', type=str, default=None, help='tokenizer classname')
     parser.add_argument('--tokenizer_id', type=str, default=None, help='tokenizer id')
@@ -69,7 +69,7 @@ def integrate():
                 raise ValueError(f'Unknown tokenizer: {args.tokenizer}. Available tokenizers: {tokenizers.keys()}')
             tokenizer = tokenizers[args.tokenizer](vocab=args.vocab, **tokenizer_params)
 
-        ut.add_job(tokenizer=tokenizer, column=args.column, name=args.name, truncate=args.truncate)
+        ut.add_feature(tokenizer=tokenizer, column=args.column, name=args.name, truncate=args.truncate)
         ut.tokenize(df).save(args.path)
 
 
@@ -85,11 +85,11 @@ def summarize():
 def remove():
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=str, default='.', help='path to a unitok data directory')
-    parser.add_argument('--name', type=str, help='job name to remove')
+    parser.add_argument('--name', type=str, help='feature name to remove')
     args, _ = parser.parse_known_args()
 
     with UniTok.load(args.path) as ut:
-        ut.remove_job(args.name)
+        ut.remove_feature(args.name)
         ut.save(args.path)
 
 

@@ -11,8 +11,9 @@ from unitok.tokenizer import TransformersTokenizer, BertTokenizer
 from unitok.tokenizer import SplitTokenizer, DigitTokenizer, DigitsTokenizer
 from unitok.tokenizer import GloVeTokenizer
 from unitok.job import Job, JobHub
+from unitok.feature import Feature, FeatureHub
 
-from unitok.utils.index_set import IndexSet, VocabSet, TokenizerSet, JobSet
+from unitok.utils.index_set import IndexSet, VocabSet, TokenizerSet, JobSet, FeatureSet
 
 from unitok.meta import Meta
 from unitok.status import Status
@@ -32,7 +33,8 @@ __all__ = [
     'SplitTokenizer', 'DigitTokenizer', 'DigitsTokenizer',
     'GloVeTokenizer',
     'Job', 'JobHub',
-    'IndexSet', 'VocabSet', 'TokenizerSet', 'JobSet',
+    'Feature', 'FeatureHub',
+    'IndexSet', 'VocabSet', 'TokenizerSet', 'JobSet', 'FeatureSet',
     'Meta',
     'Status',
     'UniTok',

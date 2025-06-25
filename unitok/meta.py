@@ -1,21 +1,22 @@
 import json
 import os
+import warnings
 from datetime import datetime
 
+from unitok.feature import Feature
 from unitok.utils.verbose import warning
-from unitok.job import Job
 from unitok.tokenizer import TokenizerHub
 from unitok.tokenizer.union_tokenizer import UnionTokenizer
 from unitok.tokenizer.unknown_tokenizer import UnknownTokenizer
 from unitok.utils import Symbols
 from unitok.utils.handler import JsonHandler
 from unitok.utils.class_pool import ClassPool
-from unitok.utils.index_set import VocabSet, TokenizerSet, JobSet
+from unitok.utils.index_set import VocabSet, TokenizerSet, FeatureSet
 from unitok.vocabulary import Vocab, VocabHub
 
 
 class Meta:
-    version = 'unidep-v4'
+    version = 'unidep-v4.1'
 
     def __init__(self):
         self.note = ('Not compatible with unitok-v3 or lower version, '
@@ -24,7 +25,7 @@ class Meta:
         self.modified_at = self.created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.vocabularies = VocabSet()
         self.tokenizers = TokenizerSet()
-        self.jobs = JobSet()
+        self.features = FeatureSet()
 
     @staticmethod
     def parse_vocabulary(name: str, **kwargs):
@@ -45,7 +46,7 @@ class Meta:
         return tokenizer_classes[classname](tokenizer_id=tokenizer_id, vocab=vocab, **params)
 
     @staticmethod
-    def parse_job(name: str, column: str, tokenizer: str, truncate: int, order: int, key: bool, max_len: int):
+    def parse_feature(name: str, column: str, tokenizer: str, truncate: int, order: int, key: bool, max_len: int):
         if not TokenizerHub.has(tokenizer):
             raise ValueError(f"(unitok.meta) Tokenizer {tokenizer} not found in the tokenizer hub.")
         tokenizer = TokenizerHub.get(tokenizer)
@@ -53,7 +54,7 @@ class Meta:
         if column == str(Symbols.idx):
             column = Symbols.idx
 
-        return Job(
+        return Feature(
             name=name,
             column=column,
             tokenizer=tokenizer,
@@ -62,6 +63,11 @@ class Meta:
             key=key,
             max_len=max_len,
         )
+
+    @staticmethod
+    def parse_job(name: str, column: str, tokenizer: str, truncate: int, order: int, key: bool, max_len: int):
+        warnings.deprecated('`parse_job` is deprecated, use `parse_feature` instead.', stacklevel=2)
+        return Meta.parse_feature(name, column, tokenizer, truncate, order, key, max_len)
 
     @staticmethod
     def parse_version(version):
@@ -115,7 +121,7 @@ class Meta:
         meta.created_at = kwargs.get('created_at')
         meta.vocabularies = VocabSet({cls.parse_vocabulary(**v).load(save_dir) for v in kwargs.get('vocabularies')})
         meta.tokenizers = TokenizerSet({cls.parse_tokenizer(**t) for t in kwargs.get('tokenizers')})
-        meta.jobs = JobSet({cls.parse_job(**j) for j in kwargs.get('jobs')})
+        meta.features = FeatureSet({cls.parse_feature(**f) for f in kwargs.get('features') or kwargs.get('jobs')})
         meta.version = kwargs.get('version')
 
         return meta
@@ -129,7 +135,7 @@ class Meta:
             "modified_at": self.modified_at,
             "vocabularies": [v.json() for v in self.vocabularies],
             "tokenizers": [t.json() for t in self.tokenizers],
-            "jobs": [j.json() for j in self.jobs],
+            "features": [f.json() for f in self.features],
         }
 
     def save(self, save_dir):
