@@ -27,6 +27,11 @@ class Meta:
         self.tokenizers = TokenizerSet()
         self.features = FeatureSet()
 
+    @property
+    def jobs(self):
+        warnings.warn('`jobs` is deprecated, use `features` instead.', DeprecationWarning, stacklevel=2)
+        return self.features
+
     @staticmethod
     def parse_vocabulary(name: str, **kwargs):
         return Vocab(name)
