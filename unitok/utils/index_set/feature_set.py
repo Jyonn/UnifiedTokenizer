@@ -22,4 +22,5 @@ class FeatureSet(IndexSet[Feature]):
                 raise ValueError(f'Merge unprocessed feature: {feature}')
             if self.has(self._get_key(feature)):
                 raise ValueError(f'Conflict feature name: {feature.name}')
-            self.add(feature.clone(order=next_order, tokenizer=UnionTokenizer(feature.tokenizer)))
+            # self.add(feature.clone(order=next_order, tokenizer=UnionTokenizer(feature.tokenizer)))
+            self.add(feature.clone(order=next_order))

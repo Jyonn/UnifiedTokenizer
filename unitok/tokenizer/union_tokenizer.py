@@ -12,6 +12,9 @@ class UnionTokenizer(BaseTokenizer):
         self.tokenizer = tokenizer
         self.classname = self.tokenizer._detailed_classname
 
+    def __call__(self, obj):
+        raise NotImplementedError('UnionTokenizer is used as a placeholder and should not be called.')
+
     @property
     def _detailed_classname(self):
         return f'{self.__class__.__name__}[{self.classname}]'
